@@ -3,7 +3,7 @@ spring:
     group:
       "prod": "default, prod"
       "dev": "default, dev"
-    active: dev
+    default:  prod
   application:
     name: every
 server:
