@@ -1,0 +1,10 @@
+spring.config.activate.on-profile: dev
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: "jdbc:postgresql://localhost:54325/postgres"
+    username: postgres
+    password: everyDB
+#    url: "jdbc:postgresql://pythadata.iptime.org:54325/dongjak"
+#    username: pytha
+#    password: pytha!23$

@@ -1,0 +1,11 @@
+spring.config.activate.on-profile: prod
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: 192.168.0.103
+    username: postgres
+    password: everyDB
+
+server:
+  port: 8083
+
