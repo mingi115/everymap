@@ -6,6 +6,4 @@ spring:
     username: postgres
     password: everyDB
 
-server:
-  port: 8083
 
