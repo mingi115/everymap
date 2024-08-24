@@ -7,3 +7,12 @@ spring:
     password: everyDB
 
 
+logging.level.root : info
+logging:
+  logback:
+    rollingpolicy:
+      total-size-cap: 2GB
+
+  file:
+    path: ~/appLog
+    name: everymap_log

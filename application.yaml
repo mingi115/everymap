@@ -22,5 +22,13 @@ spec:
               value: "Asia/Seoul"
           ports:
             - containerPort: 8082
+          volumeMounts:
+            - mountPath: /logs
+              name: logging-volume
+      volumes:
+        - name: logging-volume
+          hostPath:
+            path: ~/appLog
+            type: Directory
       imagePullSecrets:
         - name: registry-credential
