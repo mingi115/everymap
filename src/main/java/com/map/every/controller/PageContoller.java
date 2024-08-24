@@ -11,6 +11,6 @@ public class PageContoller {
 
     @GetMapping(value = "/")
     public String everymapHome(){
-        return "/everymap.html";
+        return "everymap.html";
     }
 }
