@@ -6,6 +6,9 @@ spring:
     default:  prod
   application:
     name: every
+  thymeleaf:
+    prefix: "classpath:/templates/"
+    suffix: ".html"
 server:
   port: 8082
 
