@@ -2,7 +2,7 @@ spring.config.activate.on-profile: prod
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: 192.168.0.103
+    url: "jdbc:postgresql://192.168.0.103:5432/postgres"
     username: postgres
     password: everyDB
 
