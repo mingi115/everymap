@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.map.every.mapper.GisMapper">
+
+  <select id="selectShortestPath" parameterType="hashMap" resultType="hashMap">
+    select st_astext(st_linemerge(st_collect(geom))) as route
+    from (select pl.geom
+          from pgr_dijkstra('select
+              link_id::bigint as id,
+              from_node_id::bigint as source,
+              to_node_id::bigint as target,
+              link_len::double precision as cost
+              from
+              pedestrian_link'::text,
+                            (select node_id::bigint
+                             from test.pedestrian_node
+                             where st_dwithin(geom,
+                                              st_geometryfromtext(#{startCoord}, 4326),
+                                              30000, false)
+                             ORDER BY ST_Distance(geom,
+                                                  st_geometryfromtext(#{startCoord}, 4326))
+                             limit 1),
+                            (select node_id::bigint
+                             from test.pedestrian_node
+                             where st_dwithin(geom,
+                                              st_geometryfromtext(#{endCoord}, 4326),
+                                              30000, false)
+                             ORDER BY ST_Distance(geom,
+                                                  st_geometryfromtext(#{endCoord}, 4326))
+                             limit 1), true) as pgr,
+               pedestrian_link pl
+          where edge = pl.link_id) pgr
+  </select>
+</mapper>
