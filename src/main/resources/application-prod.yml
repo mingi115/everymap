@@ -14,5 +14,5 @@ logging:
       total-size-cap: 2GB
 
   file:
-    path: ~/appLog
+    path: /logs
     name: everymap_log
