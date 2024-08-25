@@ -43,10 +43,32 @@ function addPointOnMap(e){
       hideLodingImg();
       pointArr=[];
       addRouteOnMap(value.route);
+      addObstaclePOIOnMap(value.obstaclePoiList);
     });
   }
 }
 
+function addObstaclePOIOnMap(obstaclePoiList){
+  for(const poi of obstaclePoiList) {
+    const pointFeature = new ol.Feature({
+      geometry: wktFormatter.readFeature(poi.geom).getGeometry(),
+    });
+    pointFeature.setProperties(poi.name);
+    pointFeature.setStyle(
+        [
+          new ol.style.Style({
+            image: new ol.style.Circle({
+              radius: 4,
+              fill: new ol.style.Fill({
+                color: '#Ff7f00',
+              }),
+            })
+          })
+        ]
+    );
+    vectorSource.addFeature(pointFeature);
+  }
+}
 map.on('click', addPointOnMap);
 
 function addRouteOnMap(route){

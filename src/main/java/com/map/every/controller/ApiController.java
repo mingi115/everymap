@@ -3,6 +3,7 @@ package com.map.every.controller;
 import com.map.every.service.GisService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,9 @@ public class ApiController {
     @GetMapping(value = "/getShortestPath")
     public HashMap<String, Object> test(@RequestParam Map<String, Object> paramMap){
         log.debug(paramMap.toString());
-        return gisService.getShortestPath(paramMap);
+        HashMap<String, Object> sp = gisService.getShortestPath(paramMap);
+        List<HashMap<String, Object>> op = gisService.getObstaclePOIInRoute(sp);
+        sp.put("obstaclePoiList", op);
+        return sp;
     }
 }
