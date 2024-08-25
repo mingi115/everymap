@@ -48,28 +48,39 @@ function addPointOnMap(e){
   }
 }
 
-function addObstaclePOIOnMap(obstaclePoiList){
-  for(const poi of obstaclePoiList) {
-    const pointFeature = new ol.Feature({
-      geometry: wktFormatter.readFeature(poi.geom).getGeometry(),
-    });
-    pointFeature.setProperties(poi.name);
-    pointFeature.setStyle(
-        [
-          new ol.style.Style({
-            image: new ol.style.Circle({
-              radius: 4,
-              fill: new ol.style.Fill({
-                color: '#Ff7f00',
-              }),
-            })
-          })
-        ]
-    );
-    vectorSource.addFeature(pointFeature);
+map.on('click', mapClickEvt);
+const overlayDom = document.createElement("div");
+overlayDom.className = "overlay";
+let overlay;
+function mapClickEvt(e){
+  if(overlay){
+    map.removeOverlay(overlay);
+    overlay=null;
+    return;
   }
+
+  vectorLayer.getFeatures(e.pixel).then(function (features) {
+    const feature = features.length ? features[0] : undefined;
+    if(feature && feature.getProperties().poiInfo){
+      const poiInfo = feature.getProperties().poiInfo;
+      overlayDom.innerHTML ='';
+      for(const key in poiInfo){
+        overlayDom.innerHTML += `${key} : ${poiInfo[key]}` + '<br>';
+      }
+
+      overlay = new ol.Overlay({
+        element: overlayDom,
+        positioning : 'bottom-center'
+      });
+
+      overlay.setPosition(feature.getGeometry().getCoordinates());
+      map.addOverlay(overlay);
+    }else{
+      addPointOnMap(e);
+    }
+  })
 }
-map.on('click', addPointOnMap);
+
 
 function addRouteOnMap(route){
   const routeGeom = wktFormatter.readFeature(route).getGeometry();
@@ -103,6 +114,42 @@ function addPoint(coord){
       ]
   );
   vectorSource.addFeature(pointFeature);
+}
+
+function addObstaclePOIOnMap(obstaclePoiList){
+  for(const poi of obstaclePoiList) {
+    const pointFeature = new ol.Feature({
+      geometry: wktFormatter.readFeature(poi.geom).getGeometry(),
+    });
+
+    pointFeature.setProperties({'poiInfo': poi});
+    pointFeature.setStyle(
+        [
+          new ol.style.Style({
+            image: new ol.style.Circle({
+              radius: 6,
+              fill: new ol.style.Fill({
+                color: stringToColour(poi.category),
+              }),
+            })
+          })
+        ]
+    );
+    vectorSource.addFeature(pointFeature);
+  }
+}
+
+function stringToColour(str) {
+  let hash = 0;
+  str.split('').forEach(char => {
+    hash = char.charCodeAt(0) + ((hash << 5) - hash)
+  })
+  let colour = '#'
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xff
+    colour += value.toString(16).padStart(2, '0')
+  }
+  return colour
 }
 
 function fetchShortestPath(startCoord, endCoord){
@@ -168,7 +215,7 @@ function onClickRoadviewBtn(){
     roadviewSource.addFeature(roadviewPoint);
     map.addLayer(roadviewLayer);
     map.on('pointermove', movePointerWithFeature);
-    map.un('click', addPointOnMap);
+    map.un('click', mapClickEvt);
     map.once('click', showRoadview);
   }else{
     closeRoadviewMode();

@@ -34,7 +34,8 @@
   <select id="selectObstaclePOIInRoute" parameterType="hashMap" resultType="hashMap">
     select
       st_astext(geometry) as geom
-         , "CONTS_NAME" as name
+      , "CONTS_NAME" as name
+      , "SUB_NAME" as category
     from pedestrian_obstacle_poi pop
     where
       st_intersects(
