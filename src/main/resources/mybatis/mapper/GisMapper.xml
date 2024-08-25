@@ -28,7 +28,7 @@
                                               30000, false)
                              ORDER BY ST_Distance(geom,
                                                   st_geometryfromtext(#{endCoord}, 4326))
-                             limit 1), true) as pgr,
+                             limit 1), false) as pgr,
                pedestrian_link pl
           where edge = pl.link_id) pgr
   </select>
