@@ -1,0 +1,32 @@
+body {
+  margin: 0;
+}
+#map{
+  z-index: 0;
+  width: 100vw;
+  height: 100vh;
+}
+.btn-grp{
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+#roadview-modal{
+  z-index: -1;
+  position: fixed;
+  background-color: grey;
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+}
+#close-roadview{
+  position: absolute;
+  z-index: 1;
+  right: 0;
+}
+#roadview-target{
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
