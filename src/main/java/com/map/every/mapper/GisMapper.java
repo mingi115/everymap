@@ -8,5 +8,6 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface GisMapper {
     HashMap<String, Object> selectShortestPath(Map<String, Object> paramMap);
+    List<HashMap<String, Object>> selectShortestPathLineList(Map<String, Object> paramMap);
     List<HashMap<String, Object>> selectObstaclePOIInRoute(Map<String, Object> paramMap);
 }

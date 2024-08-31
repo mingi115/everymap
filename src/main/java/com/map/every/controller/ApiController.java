@@ -9,6 +9,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.locationtech.jts.io.ParseException;
 import org.springframework.ai.azure.openai.AzureOpenAiChatModel;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,16 +26,27 @@ public class ApiController {
     private final AzureOpenAiChatModel chatClient;
 
     @GetMapping(value = "/getShortestPath")
-    public HashMap<String, Object> test(@RequestParam Map<String, Object> paramMap){
+    public HashMap<String, Object> getShortestPath(@RequestParam Map<String, Object> paramMap)
+        throws ParseException {
         log.debug(paramMap.toString());
-        HashMap<String, Object> sp = gisService.getShortestPath(paramMap);
-        List<HashMap<String, Object>> op = gisService.getObstaclePOIInRoute(sp);
-        sp.put("obstaclePoiList", op);
-        return sp;
+        HashMap<String, Object> result = new HashMap<>();
+        List<HashMap<String, Object>> lsList = gisService.getShortestPathLineList(paramMap);
+        result.put("lsList", lsList);
+
+        String route = gisService.mergeLinestringList(lsList);
+        result.put("route", route);
+
+        List<HashMap<String, Object>> op = gisService.getObstaclePOIInRoute(result);
+        result.put("obstaclePoiList", op);
+
+        return result;
     }
 
     @GetMapping("/ai/simple")
     public Map<String, String> completion(@RequestParam(value = "message", defaultValue = "Tell me a joke") String message) {
         return Map.of("generation", chatClient.call(message));
     }
+
+
+
 }

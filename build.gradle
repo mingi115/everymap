@@ -38,7 +38,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
 	implementation 'com.github.mwiede:jsch:0.2.19'
-
+	implementation 'org.locationtech.jts:jts-core:1.20.0'
 	//implementation 'org.springframework.ai:spring-ai-openai:1.0.0-SNAPSHOT'
 	implementation 'org.springframework.ai:spring-ai-azure-openai-spring-boot-starter'
 
