@@ -1,13 +1,13 @@
 const wktFormatter = new ol.format.WKT();
 
-// const baseLayer = new ol.layer.Tile({ //타일 생성
-//   title : 'Vworld Map', //이름
-//   visible : true, //보여짐 여부
-//   type : 'base', //지도 종류(일반) ---(야간(midnight), 위성(satellite) 등)
-//   source : new ol.source.XYZ({ //vworld api 사용
-//     url : 'http://api.vworld.kr/req/wmts/1.0.0/5E8B79D4-972E-3C82-A9A6-74272B88643F/Base/{z}/{y}/{x}.png'
-//   })
-// });
+const baseLayer = new ol.layer.Tile({ //타일 생성
+  title : 'Vworld Map', //이름
+  visible : true, //보여짐 여부
+  type : 'base', //지도 종류(일반) ---(야간(midnight), 위성(satellite) 등)
+  source : new ol.source.XYZ({ //vworld api 사용
+    url : `http://api.vworld.kr/req/wmts/1.0.0/${vworldKey}/Base/{z}/{y}/{x}.png`
+  })
+});
 let vectorSource = new ol.source.Vector();
 const vectorLayer = new ol.layer.Vector({
   source : vectorSource,
@@ -20,11 +20,12 @@ const map = new ol.Map({
     zoom: 17,
   }),
   layers: [
-    new ol.layer.Tile({
-      source: new ol.source.OSM({
-        attributions : false
-      }),
-    }),
+    // new ol.layer.Tile({
+    //   source: new ol.source.OSM({
+    //     attributions : false
+    //   }),
+    // }),
+    baseLayer,
     vectorLayer
   ],
   target: 'map',

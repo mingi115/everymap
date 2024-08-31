@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.2.4/ol.css">
 </head>
 <body>
+
   <div id="map"></div>
   <div class="btn-grp">
     <button id="road-view-btn">로드뷰</button>
@@ -23,6 +24,9 @@
   <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a0dcca88f3f14dfb8b0363e1e86d3087"></script>
   <script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script>
 
+  <script>
+    const vworldKey = "[[${vworldKey}]]";
+  </script>
   <script th:src="@{/js/common.js}"></script>
   <script th:src="@{/js/map.js}"></script>
 </body>
