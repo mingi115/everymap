@@ -9,9 +9,15 @@
   <link rel="stylesheet" type="text/css" th:href="@{/css/common.css}">
   <link rel="stylesheet" type="text/css" th:href="@{/css/everymap.css}">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.2.4/ol.css">
+
 </head>
 <body>
-
+  <div id="info-tab">
+    <div class="info-contents-wrapper">
+      <h1>everymap</h1>
+      <canvas id="chart"></canvas>
+    </div>
+  </div>
   <div id="map"></div>
   <div class="btn-grp">
     <button id="road-view-btn">로드뷰</button>
@@ -22,6 +28,7 @@
     <div id="roadview-target"></div>
   </div>
   <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a0dcca88f3f14dfb8b0363e1e86d3087"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script>
 
   <script>

@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
@@ -18,8 +17,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class GisServiceImpl implements GisService {
-
-
 
     @Resource
     GisMapper gisDAO;
@@ -63,5 +60,10 @@ public class GisServiceImpl implements GisService {
     @Override
     public List<HashMap<String, Object>> getFloatingPopHeatmapPoints(Map<String, Object> paramMap) {
         return gisDAO.selectFloatingPopHeatmapPoints(paramMap);
+    }
+
+    @Override
+    public List<HashMap<String, Object>> getFloatingPopStatInRoute(Map<String, Object> paramMap) {
+        return gisDAO.selectFloatingPopStatInRoute(paramMap);
     }
 }

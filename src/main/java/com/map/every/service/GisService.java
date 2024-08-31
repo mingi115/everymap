@@ -11,4 +11,5 @@ public interface GisService {
     List<HashMap<String, Object>> getObstaclePOIInRoute(Map<String, Object> paramMap);
     String mergeLinestringList(List<HashMap<String, Object>> linestringList) throws ParseException;
     List<HashMap<String, Object>> getFloatingPopHeatmapPoints(Map<String, Object> paramMap);
+    List<HashMap<String, Object>> getFloatingPopStatInRoute(Map<String, Object> paramMap);
 }

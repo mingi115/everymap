@@ -1,3 +1,5 @@
+let routeInfo ={};
+
 const wktFormatter = new ol.format.WKT();
 
 const baseLayer = new ol.layer.Tile({ //타일 생성
@@ -56,9 +58,11 @@ function addPointOnMap(e){
     .then(value => {
       hideLodingImg();
       pointArr=[];
+      routeInfo=value;
       addRouteOnMap(value.route);
       addObstaclePOIOnMap(value.obstaclePoiList);
       addHeatmapPoint(value.heatmapPointList);
+      fetchFlowPopStat(value.route);
     });
   }
 }
@@ -259,3 +263,48 @@ closeRoadviewBtn.addEventListener('click', function(){
 
 const roadview = new kakao.maps.Roadview(roadviewTarget);
 const roadviewClient = new kakao.maps.RoadviewClient();
+
+function fetchFlowPopStat(route){
+  return fetch(`/api/getFloatingPopStat`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      weekday : 5,
+      route
+    })
+  }).then((response) => response.json())
+  .then(result =>{
+    makeFlowPopChart(result.floatingPopStat);
+  });
+}
+
+
+const chartDiv = document.getElementById("chart");
+
+
+
+
+
+function makeFlowPopChart(floatingPopStat){
+  new Chart(chartDiv, {
+    type: 'line',
+    data: {
+      labels: floatingPopStat.map(item => item.time),
+      datasets: [{
+        label: '경로상의 평균 유동인구',
+        data: floatingPopStat.map(item => item.avg),
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+

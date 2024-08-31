@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.ai.azure.openai.AzureOpenAiChatModel;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,6 +52,11 @@ public class ApiController {
         return Map.of("generation", chatClient.call(message));
     }
 
-
-
+    @PostMapping("/getFloatingPopStat")
+    public Map<String, Object> getFloatingPopStat(@RequestBody Map<String, Object> paramMap) {
+        HashMap<String, Object> result = new HashMap<>();
+        List<HashMap<String, Object>> fps = gisService.getFloatingPopStatInRoute(paramMap);
+        result.put("floatingPopStat", fps);
+        return result;
+    }
 }
