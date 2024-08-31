@@ -37,3 +37,5 @@ out/
 .vscode/
 /src/main/resources/pem/every_map.pem
 /src/main/java/com/map/every/sshtunnelinglistener/
+
+/src/main/resources/application-dev.yml
