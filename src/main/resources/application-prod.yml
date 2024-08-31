@@ -9,11 +9,12 @@ spring:
   ai:
     azure:
       openai:
-        api-key: ${AI_API_KEY}
-        endpoint: ${AI_API_ENDPOINT}
+        api-key: ${SPRING_AI_AZURE_OPENAI_API_KEY}
+        endpoint: ${SPRING_AI_AZURE_OPENAI_ENDPOINT}
         chat:
           options:
-            deployment-name: gpt35-turbo
+            deployment-name: ${SPRING_AI_AZURE_OPENAI_DEPLOYMENT_NAME}
+            model-name: ${SPRING_AI_AZURE_OPENAI_MODEL_NAME}
 
 app:
   vworld:
