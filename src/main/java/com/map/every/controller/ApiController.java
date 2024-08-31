@@ -8,6 +8,8 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.ai.azure.openai.AzureOpenAiChatModel;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ApiController {
 
     private final GisService gisService;
+    private final AzureOpenAiChatModel chatClient;
 
     @GetMapping(value = "/getShortestPath")
     public HashMap<String, Object> test(@RequestParam Map<String, Object> paramMap){
@@ -28,5 +31,10 @@ public class ApiController {
         List<HashMap<String, Object>> op = gisService.getObstaclePOIInRoute(sp);
         sp.put("obstaclePoiList", op);
         return sp;
+    }
+
+    @GetMapping("/ai/simple")
+    public Map<String, String> completion(@RequestParam(value = "message", defaultValue = "Tell me a joke") String message) {
+        return Map.of("generation", chatClient.call(message));
     }
 }

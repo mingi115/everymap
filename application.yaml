@@ -25,6 +25,9 @@ spec:
           volumeMounts:
             - mountPath: /logs
               name: logging-volume
+          envFrom:
+            - configMapRef:
+                name: everymap-configmap
       volumes:
         - name: logging-volume
           hostPath:
