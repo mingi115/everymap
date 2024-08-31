@@ -59,4 +59,9 @@ public class GisServiceImpl implements GisService {
 
         return result;
     }
+
+    @Override
+    public List<HashMap<String, Object>> getFloatingPopHeatmapPoints(Map<String, Object> paramMap) {
+        return gisDAO.selectFloatingPopHeatmapPoints(paramMap);
+    }
 }

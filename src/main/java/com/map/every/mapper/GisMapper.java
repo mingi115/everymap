@@ -10,4 +10,5 @@ public interface GisMapper {
     HashMap<String, Object> selectShortestPath(Map<String, Object> paramMap);
     List<HashMap<String, Object>> selectShortestPathLineList(Map<String, Object> paramMap);
     List<HashMap<String, Object>> selectObstaclePOIInRoute(Map<String, Object> paramMap);
+    List<HashMap<String, Object>> selectFloatingPopHeatmapPoints(Map<String, Object> paramMap);
 }

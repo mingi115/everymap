@@ -8,7 +8,15 @@ const baseLayer = new ol.layer.Tile({ //타일 생성
     url : `http://api.vworld.kr/req/wmts/1.0.0/${vworldKey}/Base/{z}/{y}/{x}.png`
   })
 });
-let vectorSource = new ol.source.Vector();
+
+const heamapSource = new ol.source.Vector();
+const heatmapLayer = new ol.layer.Heatmap({
+  source : heamapSource,
+  weight: function (feature) {
+    return feature.get('weight');
+  },
+});
+const vectorSource = new ol.source.Vector();
 const vectorLayer = new ol.layer.Vector({
   source : vectorSource,
 });
@@ -26,6 +34,7 @@ const map = new ol.Map({
     //   }),
     // }),
     baseLayer,
+    heatmapLayer,
     vectorLayer
   ],
   target: 'map',
@@ -33,7 +42,11 @@ const map = new ol.Map({
 
 let pointArr =[];
 function addPointOnMap(e){
-  pointArr.length === 0 ? vectorSource.clear() : '';
+  if(pointArr.length === 0){
+    vectorSource.clear();
+    heamapSource.clear();
+
+  };
   pointArr.push(e.coordinate);
   addPoint(e.coordinate);
 
@@ -45,7 +58,19 @@ function addPointOnMap(e){
       pointArr=[];
       addRouteOnMap(value.route);
       addObstaclePOIOnMap(value.obstaclePoiList);
+      addHeatmapPoint(value.heatmapPointList);
     });
+  }
+}
+
+function addHeatmapPoint(heatmapPointList){
+  heamapSource.clear();
+  for(const poi of heatmapPointList) {
+    const pointFeature = new ol.Feature({
+      geometry: wktFormatter.readFeature(poi.geom).getGeometry(),
+      weight:poi.total_pop
+    });
+    heamapSource.addFeature(pointFeature);
   }
 }
 
@@ -157,6 +182,8 @@ function fetchShortestPath(startCoord, endCoord){
   const params = new URLSearchParams({
     startCoord : convertCoordinateToWKTFormat(startCoord),
     endCoord : convertCoordinateToWKTFormat(endCoord),
+    weekday : 5,
+    time : new Date().getHours()
   })
   return fetch(`/api/getShortestPath?${params.toString()}`, {
     method: "GET",

@@ -34,11 +34,14 @@ public class ApiController {
         result.put("lsList", lsList);
 
         String route = gisService.mergeLinestringList(lsList);
+        paramMap.put("route", route);
         result.put("route", route);
 
-        List<HashMap<String, Object>> op = gisService.getObstaclePOIInRoute(result);
+        List<HashMap<String, Object>> op = gisService.getObstaclePOIInRoute(paramMap);
         result.put("obstaclePoiList", op);
 
+        List<HashMap<String, Object>> hmpl = gisService.getFloatingPopHeatmapPoints(paramMap);
+        result.put("heatmapPointList", hmpl);
         return result;
     }
 
