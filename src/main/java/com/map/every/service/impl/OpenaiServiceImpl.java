@@ -12,6 +12,8 @@ import org.springframework.ai.azure.openai.AzureOpenAiChatModel;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.chat.prompt.SystemPromptTemplate;
+import org.springframework.ai.chat.messages.Message;
 import com.map.every.service.OpenaiService;
 
 @Slf4j
@@ -21,8 +23,11 @@ public class OpenaiServiceImpl implements OpenaiService {
 
     private final AzureOpenAiChatModel chatClient;
 
+    @Value("classpath:prompts/system.prompt")
+    private Resource systemPrompt;
+
     @Value("classpath:prompts/summarize-path-info.prompt")
-    private Resource getCapitalPromptWithInfo;
+    private Resource summarizePathInfoPrompt;
 
     @Override
     public String generateSummary(Map<String, Object> jsonMap) {
@@ -49,9 +54,14 @@ public class OpenaiServiceImpl implements OpenaiService {
 
     @Override
     public String makeChatCompletion(String request) {
-        PromptTemplate promptTemplate = new PromptTemplate(getCapitalPromptWithInfo);
-        Prompt prompt = promptTemplate.create(
-            Map.of("path-summary", request));
+        SystemPromptTemplate systemPromptTemplate = new SystemPromptTemplate(systemPrompt);
+        Message systemPromptMessage = systemPromptTemplate.createMessage();
+
+        PromptTemplate promptTemplate = new PromptTemplate(summarizePathInfoPrompt);
+        Message promptMessage = promptTemplate.createMessage(Map.of("path-summary", request));
+
+        Prompt prompt = new Prompt(List.of(systemPromptMessage, promptMessage));
+
         return chatClient.call(prompt).getResult().getOutput().getContent();
     }
 }

@@ -364,6 +364,6 @@ function fetchAiPathSummariztion(){
     body: JSON.stringify(param)
   }).then((response) => response.json())
   .then(result =>{
-    promptResult.innerHTML = result.path_info;
+    promptResult.innerHTML = result.pathInfo;
   });
 }
