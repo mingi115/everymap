@@ -3,6 +3,8 @@ package com.map.every.controller;
 import com.map.every.service.GisService;
 import com.map.every.service.OpenaiService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +13,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.locationtech.jts.io.ParseException;
+import org.springframework.ai.azure.openai.AzureOpenAiChatModel;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.Mapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -91,5 +100,37 @@ public class ApiController {
         List<HashMap<String, Object>> fps = gisService.getFloatingPopStatInRoute(paramMap);
         result.put("floatingPopStat", fps);
         return result;
+    }
+
+
+    @PostMapping("/ai/setSummarizeData")
+    public HttpStatus setSummarizedData(
+        @RequestBody Map<String, Object> paramMap,
+        HttpServletRequest request
+    ) {
+        HttpSession session = request.getSession();
+        session.setAttribute("summaryParam", paramMap);
+        System.out.println("-------------------");
+        System.out.println(paramMap);
+        return HttpStatus.OK;
+    }
+
+    @GetMapping(value="/ai/pathSummarizationTest",
+        produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ChatResponse> summarizedPathInfoTest(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        Map<String, Object> paramMap = (Map<String, Object>) session.getAttribute("summaryParam");
+        System.out.println("-------------------");
+        System.out.println(paramMap);
+        String pathInfoSummary = openaiService.generateSummary(paramMap);
+        return openaiService.makeChatFlux(pathInfoSummary);
+    }
+
+    private final AzureOpenAiChatModel chatModel;
+    @GetMapping(value="/ai/generateStream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ChatResponse> generateStream(@RequestParam(value = "message", defaultValue = "Tell me a joke") String message) {
+        Prompt prompt = new Prompt(new UserMessage(message));
+        return chatModel.stream(prompt);
     }
 }

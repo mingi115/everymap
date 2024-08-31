@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.core.io.Resource;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,8 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import com.map.every.service.OpenaiService;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -53,5 +56,15 @@ public class OpenaiServiceImpl implements OpenaiService {
         Prompt prompt = promptTemplate.create(
             Map.of("path-summary", request));
         return chatClient.call(prompt).getResult().getOutput().getContent();
+    }
+
+
+
+    @Override
+    public Flux<ChatResponse> makeChatFlux(String request) {
+        PromptTemplate promptTemplate = new PromptTemplate(getCapitalPromptWithInfo);
+        Prompt prompt = promptTemplate.create(
+            Map.of("path-summary", request));
+        return chatClient.stream(prompt);
     }
 }

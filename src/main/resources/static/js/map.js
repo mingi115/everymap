@@ -353,17 +353,45 @@ function makePromptParam(){
 }
 
 const promptResult = document.getElementById('prompt-result');
+// function fetchAiPathSummariztion(){
+//   const param = makePromptParam();
+//
+//   return fetch(`/api/ai/pathSummarization`, {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify(param)
+//   }).then((response) => response.json())
+//   .then(result =>{
+//     promptResult.innerHTML = result.path_info;
+//   });
+// }
+
 function fetchAiPathSummariztion(){
   const param = makePromptParam();
 
-  return fetch(`/api/ai/pathSummarization`, {
+  return fetch(`/api/ai/setSummarizeData`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(param)
-  }).then((response) => response.json())
-  .then(result =>{
-    promptResult.innerHTML = result.path_info;
-  });
+  }).then((response) => {
+    if(response.ok) {
+      const eventSource = new EventSource('/api/ai/pathSummarizationTest');
+      eventSource.onmessage = function(event) {
+        const evtResult = JSON.parse(event.data);
+        console.log('Received event:', evtResult);
+        promptResult.innerHTML+= evtResult.result.output.content;
+      };
+      eventSource.onerror = function(error) {
+        console.error('Error occurred:', error);
+        closeConnection();
+      };
+      function closeConnection() {
+        eventSource.close();
+      }
+    }
+  })
 }

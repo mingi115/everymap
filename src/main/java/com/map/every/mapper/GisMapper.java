@@ -12,4 +12,6 @@ public interface GisMapper {
     List<HashMap<String, Object>> selectObstaclePOIInRoute(Map<String, Object> paramMap);
     List<HashMap<String, Object>> selectFloatingPopHeatmapPoints(Map<String, Object> paramMap);
     List<HashMap<String, Object>> selectFloatingPopStatInRoute(Map<String, Object> paramMap);
+
+    Map<String, Object> selectSummaryInRoute(Map<String, Object> paramMap);
 }
