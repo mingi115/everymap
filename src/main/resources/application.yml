@@ -9,21 +9,11 @@ spring:
   thymeleaf:
     prefix: "classpath:/templates/"
     suffix: ".html"
-  ai:
-    azure:
-      openai:
-        api-key: ${AI_API_KEY}
-        endpoint: ${AI_API_ENDPOINT}
-        chat:
-          options:
-            deployment-name: gpt35-turbo
 
 server:
   port: 8082
 
-
 ---
-
 
 spring.config.activate.on-profile: default
 mybatis:

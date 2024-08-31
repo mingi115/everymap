@@ -6,6 +6,19 @@ spring:
     username: ${DATASOURCE_USERNAME}
     password: ${DATASOURCE_PASSWORD}
 
+  ai:
+    azure:
+      openai:
+        api-key: ${AI_API_KEY}
+        endpoint: ${AI_API_ENDPOINT}
+        chat:
+          options:
+            deployment-name: gpt35-turbo
+
+app:
+  vworld:
+    key: ${VWORLD_API_KEY}
+
 
 logging.level.root : info
 logging:
