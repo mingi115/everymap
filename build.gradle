@@ -55,3 +55,10 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+tasks.named('build') {
+	doFirst {
+		// 환경 변수 설정
+		def someProperty = System.getenv('VWORLD_API_KEY') ?: 'defaultValue'
+	}
+}
