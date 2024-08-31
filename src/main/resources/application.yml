@@ -10,6 +10,20 @@ spring:
     prefix: "classpath:/templates/"
     suffix: ".html"
 
+  ai:
+    azure:
+      openai:
+        api-key: ${SPRING_AI_AZURE_OPENAI_API_KEY}
+        endpoint: ${SPRING_AI_AZURE_OPENAI_ENDPOINT}
+        chat:
+          options:
+            deployment-name: ${SPRING_AI_AZURE_OPENAI_DEPLOYMENT_NAME}
+            model-name: ${SPRING_AI_AZURE_OPENAI_MODEL_NAME}
+
+app:
+  vworld:
+    key: ${VWORLD_API_KEY}
+
 server:
   port: 8082
 
