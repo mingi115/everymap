@@ -32,7 +32,12 @@
           where edge = pl.link_id) pgr
   </select>
   <select id="selectShortestPathLineList" parameterType="hashMap" resultType="hashMap">
-    select pl.link_id, st_astext(pl.geom) as wktgeom
+    select pl.link_id,
+           st_astext(pl.geom) as wktgeom,
+           plss.slope_count,
+           plss.slope_median,
+           plss.slope_min,
+           plss.slope_max
           from pgr_dijkstra('select
               link_id::bigint as id,
               from_node_id::bigint as source,
@@ -56,8 +61,10 @@
                              ORDER BY ST_Distance(geom,
                                                   st_geometryfromtext(#{endCoord}, 4326))
                              limit 1), false) as pgr,
-               pedestrian_link pl
+               pedestrian_link pl,
+               pedestrian_link_slope_stat plss
           where edge = pl.link_id
+            and plss.link_id = pl.link_id
   </select>
   <select id="selectObstaclePOIInRoute" parameterType="hashMap" resultType="hashMap">
     select

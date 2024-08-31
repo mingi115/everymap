@@ -15,7 +15,7 @@ const heamapSource = new ol.source.Vector();
 const heatmapLayer = new ol.layer.Heatmap({
   source : heamapSource,
   weight: function (feature) {
-    return feature.get('weight');
+    return feature.get('weight') * 10;
   },
 });
 const vectorSource = new ol.source.Vector();
@@ -42,13 +42,21 @@ const map = new ol.Map({
   target: 'map',
 });
 
+function clearWindow(){
+  vectorSource.clear();
+  heamapSource.clear();
+  routeInfo={};
+  promptResult.innerHTML = '';
+  if(popChart){
+    popChart.destroy();
+  }
+}
+
 let pointArr =[];
 function addPointOnMap(e){
   if(pointArr.length === 0){
-    vectorSource.clear();
-    heamapSource.clear();
-
-  };
+    clearWindow();
+  }
   pointArr.push(e.coordinate);
   addPoint(e.coordinate);
 
@@ -62,13 +70,13 @@ function addPointOnMap(e){
       addRouteOnMap(value.route);
       addObstaclePOIOnMap(value.obstaclePoiList);
       addHeatmapPoint(value.heatmapPointList);
+      fetchAiPathSummariztion();
       fetchFlowPopStat(value.route);
     });
   }
 }
 
 function addHeatmapPoint(heatmapPointList){
-  heamapSource.clear();
   for(const poi of heatmapPointList) {
     const pointFeature = new ol.Feature({
       geometry: wktFormatter.readFeature(poi.geom).getGeometry(),
@@ -282,13 +290,13 @@ function fetchFlowPopStat(route){
 
 
 const chartDiv = document.getElementById("chart");
-
+let popChart;
 
 
 
 
 function makeFlowPopChart(floatingPopStat){
-  new Chart(chartDiv, {
+  popChart = new Chart(chartDiv, {
     type: 'line',
     data: {
       labels: floatingPopStat.map(item => item.time),
@@ -307,4 +315,55 @@ function makeFlowPopChart(floatingPopStat){
     }
   });
 }
+function makePromptParam(){
+  const heatmapPointList = routeInfo.heatmapPointList;
+  const popValues = heatmapPointList.map(item => item.total_pop);
+  const current = popValues.reduce((a, b) => a + b, 0) / popValues.length;
+  const quite = Math.min(...popValues);
+  const crowded = Math.max(...popValues);
+  const floating_population ={
+    current, quite, crowded
+  }
 
+  //slope 정보
+  const lsList = routeInfo.lsList;
+  const slopeMinValues = lsList.map(item => item.slope_min);
+  const slopeMedianValues = lsList.map(item => item.slope_median);
+  const slopeMaxValues = lsList.map(item => item.slope_max);
+  const avgSlopeMedian = slopeMedianValues.reduce((a, b) => a + b, 0) / slopeMedianValues.length;
+  const minSlopeMin = Math.min(...slopeMinValues);
+  const maxSlopeMax = Math.max(...slopeMaxValues);
+  const slope ={
+    'min':minSlopeMin,
+    'max':maxSlopeMax,
+    'avg': avgSlopeMedian,
+    'safety_min': '',
+    'safety_max': ''
+  }
+
+  const obstaclePoiList = routeInfo.obstaclePoiList;
+  const obstacles = obstaclePoiList.reduce((acc, item) => {
+    acc[item.category] = (acc[item.category] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    floating_population, slope, obstacles
+  };
+}
+
+const promptResult = document.getElementById('prompt-result');
+function fetchAiPathSummariztion(){
+  const param = makePromptParam();
+
+  return fetch(`/api/ai/pathSummarization`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(param)
+  }).then((response) => response.json())
+  .then(result =>{
+    promptResult.innerHTML = result.path_info;
+  });
+}
