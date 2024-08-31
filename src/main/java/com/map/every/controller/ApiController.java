@@ -82,7 +82,7 @@ public class ApiController {
         String pathInfoSummary = openaiService.generateSummary(paramMap);
         String pathInfoChatCompletion = openaiService.makeChatCompletion(pathInfoSummary);
 
-        return Map.of("path_info", pathInfoChatCompletion);
+        return Map.of("pathInfo", pathInfoChatCompletion);
     }
 
     @PostMapping("/getFloatingPopStat")
