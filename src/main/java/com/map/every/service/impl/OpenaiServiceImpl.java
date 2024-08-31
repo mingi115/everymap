@@ -72,9 +72,13 @@ public class OpenaiServiceImpl implements OpenaiService {
 
     @Override
     public Flux<ChatResponse> makeChatFlux(String request) {
-        PromptTemplate promptTemplate = new PromptTemplate(getCapitalPromptWithInfo);
-        Prompt prompt = promptTemplate.create(
-            Map.of("path-summary", request));
+        SystemPromptTemplate systemPromptTemplate = new SystemPromptTemplate(systemPrompt);
+        Message systemPromptMessage = systemPromptTemplate.createMessage();
+
+        PromptTemplate promptTemplate = new PromptTemplate(summarizePathInfoPrompt);
+        Message promptMessage = promptTemplate.createMessage(Map.of("path-summary", request));
+
+        Prompt prompt = new Prompt(List.of(systemPromptMessage, promptMessage));
         return chatClient.stream(prompt);
     }
 }
