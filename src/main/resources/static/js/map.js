@@ -337,8 +337,8 @@ function makePromptParam(){
     'min':minSlopeMin,
     'max':maxSlopeMax,
     'avg': avgSlopeMedian,
-    'safety_min': '',
-    'safety_max': ''
+    'safety_min': '4',
+    'safety_max': '6'
   }
 
   const obstaclePoiList = routeInfo.obstaclePoiList;
