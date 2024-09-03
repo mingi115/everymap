@@ -18,4 +18,10 @@ public class PageContoller {
         model.addAttribute("vworldKey", vworldKey);
         return "everymap";
     }
+
+    @GetMapping(value = "/map-with-chat")
+    public String everymapWithChat(Model model) {
+        model.addAttribute("vworldKey", vworldKey);
+        return "map-with-chat";
+    }
 }
