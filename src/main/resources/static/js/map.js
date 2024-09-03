@@ -46,14 +46,13 @@ function clearWindow(){
   vectorSource.clear();
   heamapSource.clear();
   routeInfo={};
-  promptResult.innerHTML = '';
   if(popChart){
     popChart.destroy();
   }
 }
 
 let pointArr =[];
-function addPointOnMap(e){
+async function addPointOnMap(e){
   if(pointArr.length === 0){
     clearWindow();
   }
@@ -62,18 +61,21 @@ function addPointOnMap(e){
 
   if(pointArr.length >= 2){
     showLodingImg();
-    fetchShortestPath(pointArr[0], pointArr[pointArr.length-1])
-    .then(value => {
-      hideLodingImg();
-      pointArr=[];
-      routeInfo=value;
-      addRouteOnMap(value.route);
-      addObstaclePOIOnMap(value.obstaclePoiList);
-      addHeatmapPoint(value.heatmapPointList);
-      fetchAiPathSummariztion();
-      fetchFlowPopStat(value.route);
-    });
+    routeInfo= await fetchShortestPath(pointArr[0], pointArr[pointArr.length-1])
+    hideLodingImg();
+    pointArr=[];
+    addRouteOnMap(routeInfo.route);
+    addObstaclePOIOnMap(routeInfo.obstaclePoiList);
+    addHeatmapPoint(routeInfo.heatmapPointList);
+    addPathSummerization();
+    fetchFlowPopStat(routeInfo.route);
   }
+}
+async function addPathSummerization(){
+  addLoadingChatCard();
+  const result = await fetchAiPathSummarization(makePromptParam());
+  deleteLoadingChatCard();
+  addNewChatCard(result.pathInfo);
 }
 
 function addHeatmapPoint(heatmapPointList){
@@ -190,20 +192,7 @@ function stringToColour(str) {
   return colour
 }
 
-function fetchShortestPath(startCoord, endCoord){
-  const params = new URLSearchParams({
-    startCoord : convertCoordinateToWKTFormat(startCoord),
-    endCoord : convertCoordinateToWKTFormat(endCoord),
-    weekday : 5,
-    time : new Date().getHours()
-  })
-  return fetch(`/api/getShortestPath?${params.toString()}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  }).then((response) => response.json());
-}
+
 
 function convertCoordinateToWKTFormat(coord){
   const point = new ol.geom.Point(coord);
@@ -352,18 +341,5 @@ function makePromptParam(){
   };
 }
 
-const promptResult = document.getElementById('prompt-result');
-function fetchAiPathSummariztion(){
-  const param = makePromptParam();
 
-  return fetch(`/api/ai/pathSummarization`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(param)
-  }).then((response) => response.json())
-  .then(result =>{
-    promptResult.innerHTML = result.pathInfo;
-  });
-}
+
