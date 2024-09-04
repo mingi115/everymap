@@ -1,7 +1,5 @@
 let routeInfo ={};
-
 const wktFormatter = new ol.format.WKT();
-
 const baseLayer = new ol.layer.Tile({ //타일 생성
   title : 'Vworld Map', //이름
   visible : true, //보여짐 여부
@@ -68,14 +66,24 @@ async function addPointOnMap(e){
     addObstaclePOIOnMap(routeInfo.obstaclePoiList);
     addHeatmapPoint(routeInfo.heatmapPointList);
     addPathSummerization();
-    fetchFlowPopStat(routeInfo.route);
+    await showFlowPopChart(routeInfo.route, new Date().getDay());
   }
 }
-async function addPathSummerization(){
+function addPathSummerization(){
   addLoadingChatCard();
-  const result = await fetchAiPathSummarization(makePromptParam());
-  deleteLoadingChatCard();
-  addNewChatCard(result.pathInfo);
+  fetchAiPathSummarization(makePromptParam()).then(result=>{
+    deleteLoadingChatCard();
+    addNewChatCard(result.pathInfo);
+  });
+}
+
+async function showFlowPopChart(route, weekday){
+  if(!route) return;
+  if(popChart){
+    popChart.destroy();
+  }
+  const result = await fetchFlowPopStat(route, weekday);
+  makeFlowPopChart(result.floatingPopStat);
 }
 
 function addHeatmapPoint(heatmapPointList){
@@ -198,7 +206,114 @@ function convertCoordinateToWKTFormat(coord){
   const point = new ol.geom.Point(coord);
   return wktFormatter.writeGeometry(point);
 }
+addChartDayBtnEvt();
+function addChartDayBtnEvt(){
+  const btnList = document.querySelectorAll('.day-btn-grp > *');
 
+  btnList.forEach((btn, index) => {
+    btn.onclick = () => {
+
+      showFlowPopChart(routeInfo.route, (7-(6-index))%7);
+      document.querySelectorAll('.day-btn-grp > *')
+        .forEach(button => button.classList.remove('active'));
+      btn.classList.add('active');
+    };
+  })
+}
+
+const chartDiv = document.getElementById("chart");
+let popChart;
+function makeFlowPopChart(floatingPopStat){
+  const dataSeries = floatingPopStat.map(item => item.avg);
+  const peakIndex = dataSeries.indexOf(Math.max(...dataSeries));
+
+  popChart = new Chart(chartDiv, {
+    type: 'line',
+    data: {
+      labels: floatingPopStat.map(item => item.time),
+      datasets: [{
+        label: '경로상의 평균 유동인구',
+        data: dataSeries,
+        borderWidth: 1,
+        pointBackgroundColor: dataSeries.map((value, index) => index === peakIndex ? 'red' : 'rgba(54, 162, 235, 1)'),
+        pointBorderColor: dataSeries.map((value, index) => index === peakIndex ? 'red' : 'rgba(54, 162, 235, 1)'),
+        pointRadius: dataSeries.map((value, index) => index === peakIndex ? 6 : 3),
+        pointHoverRadius: dataSeries.map((value, index) => index === peakIndex ? 8 : 5),
+      }]
+    },
+
+    options: {
+      scales: {
+        y: {
+          max: Math.max(...dataSeries) + 2,
+          beginAtZero: false
+        },
+      },
+      plugins: {
+        annotation: {
+          annotations: {
+            label1: {
+              type: 'label',
+              xValue: peakIndex,
+              yValue: dataSeries[peakIndex],
+              backgroundColor: 'rgba(255, 99, 132, 0.8)',
+              content: ['최고 인기 ' + peakIndex + '시'],
+              enabled: true,
+              position: 'top',
+              yAdjust: -11,
+              borderRadius: 4,
+              font: {
+                size: 10,
+                weight: 'bold',
+                color: '#fff'
+              }
+            }
+          }
+        },
+      }
+    }
+  });
+}
+function makePromptParam(){
+  const heatmapPointList = routeInfo.heatmapPointList;
+  const popValues = heatmapPointList.map(item => item.total_pop);
+  const current = popValues.reduce((a, b) => a + b, 0) / popValues.length;
+  const quite = Math.min(...popValues);
+  const crowded = Math.max(...popValues);
+  const floating_population ={
+    current, quite, crowded
+  }
+
+  //slope 정보
+  const lsList = routeInfo.lsList;
+  const slopeMinValues = lsList.map(item => item.slope_min);
+  const slopeMedianValues = lsList.map(item => item.slope_median);
+  const slopeMaxValues = lsList.map(item => item.slope_max);
+  const avgSlopeMedian = slopeMedianValues.reduce((a, b) => a + b, 0) / slopeMedianValues.length;
+  const minSlopeMin = Math.min(...slopeMinValues);
+  const maxSlopeMax = Math.max(...slopeMaxValues);
+  const slope ={
+    'min':minSlopeMin,
+    'max':maxSlopeMax,
+    'avg': avgSlopeMedian,
+    'safety_min': '4',
+    'safety_max': '6'
+  }
+
+  const obstaclePoiList = routeInfo.obstaclePoiList;
+  const obstacles = obstaclePoiList.reduce((acc, item) => {
+    acc[item.category] = (acc[item.category] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    floating_population, slope, obstacles
+  };
+}
+
+
+
+//roadview 시작
 let isRoadviewMode = false;
 const rvbtn = document.getElementById('road-view-btn');
 rvbtn.addEventListener("click", onClickRoadviewBtn);
@@ -260,86 +375,4 @@ closeRoadviewBtn.addEventListener('click', function(){
 
 const roadview = new kakao.maps.Roadview(roadviewTarget);
 const roadviewClient = new kakao.maps.RoadviewClient();
-
-function fetchFlowPopStat(route){
-  return fetch(`/api/getFloatingPopStat`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      weekday : 5,
-      route
-    })
-  }).then((response) => response.json())
-  .then(result =>{
-    makeFlowPopChart(result.floatingPopStat);
-  });
-}
-
-
-const chartDiv = document.getElementById("chart");
-let popChart;
-
-
-
-
-function makeFlowPopChart(floatingPopStat){
-  popChart = new Chart(chartDiv, {
-    type: 'line',
-    data: {
-      labels: floatingPopStat.map(item => item.time),
-      datasets: [{
-        label: '경로상의 평균 유동인구',
-        data: floatingPopStat.map(item => item.avg),
-        borderWidth: 1
-      }]
-    },
-    options: {
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      }
-    }
-  });
-}
-function makePromptParam(){
-  const heatmapPointList = routeInfo.heatmapPointList;
-  const popValues = heatmapPointList.map(item => item.total_pop);
-  const current = popValues.reduce((a, b) => a + b, 0) / popValues.length;
-  const quite = Math.min(...popValues);
-  const crowded = Math.max(...popValues);
-  const floating_population ={
-    current, quite, crowded
-  }
-
-  //slope 정보
-  const lsList = routeInfo.lsList;
-  const slopeMinValues = lsList.map(item => item.slope_min);
-  const slopeMedianValues = lsList.map(item => item.slope_median);
-  const slopeMaxValues = lsList.map(item => item.slope_max);
-  const avgSlopeMedian = slopeMedianValues.reduce((a, b) => a + b, 0) / slopeMedianValues.length;
-  const minSlopeMin = Math.min(...slopeMinValues);
-  const maxSlopeMax = Math.max(...slopeMaxValues);
-  const slope ={
-    'min':minSlopeMin,
-    'max':maxSlopeMax,
-    'avg': avgSlopeMedian,
-    'safety_min': '4',
-    'safety_max': '6'
-  }
-
-  const obstaclePoiList = routeInfo.obstaclePoiList;
-  const obstacles = obstaclePoiList.reduce((acc, item) => {
-    acc[item.category] = (acc[item.category] || 0) + 1;
-    return acc;
-  }, {});
-
-  return {
-    floating_population, slope, obstacles
-  };
-}
-
-
-
+//roadview 끝

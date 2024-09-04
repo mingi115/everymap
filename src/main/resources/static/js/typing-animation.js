@@ -3,9 +3,18 @@ function animateTyping(messageElementId, message = '', typeSpeed = 10){
     console.error('messageElementId not found');
   }
 
+  const cardBody = document.querySelector(messageElementId);
+  const config = { childList: true, subtree: true };
+  observer.observe(cardBody, config);
   message = message.trim().replace(/(?:\r\n|\r|\n)/g, '<br>');
   var typingInstance = new Typed(messageElementId, { strings: [ message ], typeSpeed, showCursor: false, });
 }
+function cardWrapperScrollToBottom(){
+  const chatContainer = document.querySelector(".card-body-wrapper");
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+const observer = new MutationObserver(cardWrapperScrollToBottom);
+
 
 function createNewChatCard(cardId){
   const cardBody = document.createElement("div");
@@ -36,7 +45,7 @@ function createNewChatCard(cardId){
   flexCardBody.appendChild(card);
   cardBody.appendChild(flexCardBody);
 
-  const chatContainer = document.querySelector("#chat-container");
+  const chatContainer = document.querySelector(".card-body-wrapper");
   chatContainer.appendChild(cardBody);
 
   return cardBody;

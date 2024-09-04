@@ -22,3 +22,16 @@ function fetchAiPathSummarization(param){
     body: JSON.stringify(param)
   }).then((response) => response.json())
 }
+
+function fetchFlowPopStat(route, weekday){
+  return fetch(`/api/getFloatingPopStat`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      weekday,
+      route
+    })
+  }).then((response) => response.json())
+}

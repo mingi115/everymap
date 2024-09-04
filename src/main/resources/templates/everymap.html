@@ -24,7 +24,7 @@
   </div>-->
   <div id="map"></div>
   <div class="btn-grp">
-    <button id="road-view-btn">로드뷰</button>
+    <button type="button" id="road-view-btn" class="btn btn-success">로드뷰</button>
   </div>
 
   <div id="roadview-modal">
@@ -32,7 +32,7 @@
     <div id="roadview-target"></div>
   </div>
   <!-- Chat Container -->
-  <div class="container floating-box" style="margin-right: 0px; right: 20px; width: 30%">
+  <div class="container floating-box" style="margin-right: 0px; right: 20px; width: 459px">
     <div class="row">
       <div class="">
         <div class="card" id="chat-container" style="border-radius: 15px;">
@@ -45,13 +45,31 @@
             <i class="fas fa-times"></i>
           </div>
           <!-- chat body -->
-          <div class="card-body">
-            <div class="d-flex flex-row justify-content-start mb-4">
-              <img src="/image/lx.jpg" alt="avatar 1" style="width: 45px; height: 100%;">
-              <div class="p-3 ms-3" style="border-radius: 15px; background-color: rgba(1, 152, 129, .2);">
-                <p id="chat-0" class="small mb-0"></p>
+          <div class="card-body-wrapper">
+            <div class="card-body">
+              <div class="d-flex flex-row justify-content-start mb-4">
+                <img src="/image/lx.jpg" alt="avatar 1" style="width: 45px; height: 100%;">
+                <div class="p-3 ms-3" style="border-radius: 15px; background-color: rgba(1, 152, 129, .2);">
+                  <p id="chat-0" class="small mb-0"></p>
+                </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="chart-wrapper">
+        <div class="card">
+          <canvas id="chart"></canvas>
+          <div class="day-btn-grp">
+            <button type="button" class="btn btn-light">월</button>
+            <button type="button" class="btn btn-light">화</button>
+            <button type="button" class="btn btn-light">수</button>
+            <button type="button" class="btn btn-light">목</button>
+            <button type="button" class="btn btn-light">금</button>
+            <button type="button" class="btn btn-light">토</button>
+            <button type="button" class="btn btn-light">일</button>
           </div>
         </div>
       </div>
@@ -60,6 +78,7 @@
 
   <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a0dcca88f3f14dfb8b0363e1e86d3087"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
   <script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script>
   <script th:src="@{/js/typing-animation.js}"></script>
   <script th:src="@{/js/fetch-api.js}"></script>
