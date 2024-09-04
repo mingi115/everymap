@@ -5,7 +5,7 @@ function animateTyping(messageElementId, message = '', typeSpeed = 10){
 
   message = message.trim().replace(/(?:\r\n|\r|\n)/g, '<br>');
   var typingInstance = new Typed(messageElementId, { strings: [ message ], typeSpeed, showCursor: false, });
-
+}
 
 function createNewChatCard(cardId){
   const cardBody = document.createElement("div");
