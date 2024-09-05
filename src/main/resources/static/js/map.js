@@ -57,13 +57,15 @@ async function addPointOnMap(e){
     routeInfo= await fetchShortestPath(pointArr[0], pointArr[pointArr.length-1])
     hideLodingImg();
     pointArr=[];
-    addRouteOnMap(routeInfo.route);
+    addRouteOnMap(routeInfo.lsList);
     addObstaclePOIOnMap(routeInfo.obstaclePoiList);
     addHeatmapPoint(routeInfo.heatmapPointList);
     addPathSummerization();
+    addActiveClassOnBtnUsingWeekDay(new Date().getDay());
     await showFlowPopChart(routeInfo.route, new Date().getDay());
   }
 }
+
 function addPathSummerization(){
   addLoadingChatCard();
   fetchAiPathSummarization(makePromptParam()).then(result=>{
@@ -125,20 +127,30 @@ function mapClickEvt(e){
 }
 
 
-function addRouteOnMap(route){
-  const routeGeom = wktFormatter.readFeature(route).getGeometry();
-  const feature = new ol.Feature({
-    geometry: routeGeom
-  });
-  feature.setStyle(
-    new ol.style.Style({
-      stroke: new ol.style.Stroke({
-        color: '#Ff0000',
-        width: 5,
-      })
-    })
-  );
-  vectorSource.addFeature(feature);
+function addRouteOnMap(lsList){
+  lsList.forEach((item, i)=>{
+    const routeGeom = wktFormatter.readFeature(item.wktgeom).getGeometry();
+    const feature = new ol.Feature({
+      geometry: routeGeom
+    });
+    let color;
+    if(item.slope_max > 6){
+      color = '#Ff0000';
+    }else if (item.slope_max > 3){
+      color = '#ff8400';
+    }else{
+      color = '#55ff00';
+    }
+    feature.setStyle(
+        new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: color,
+            width: 5,
+          })
+        })
+    );
+    vectorSource.addFeature(feature);
+  })
 }
 
 function addPoint(coord){
