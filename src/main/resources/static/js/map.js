@@ -28,11 +28,6 @@ const map = new ol.Map({
     zoom: 17,
   }),
   layers: [
-    // new ol.layer.Tile({
-    //   source: new ol.source.OSM({
-    //     attributions : false
-    //   }),
-    // }),
     baseLayer,
     heatmapLayer,
     vectorLayer
@@ -212,14 +207,17 @@ function addChartDayBtnEvt(){
 
   btnList.forEach((btn, index) => {
     btn.onclick = () => {
-
-      showFlowPopChart(routeInfo.route, (7-(6-index))%7);
-      document.querySelectorAll('.day-btn-grp > *')
-        .forEach(button => button.classList.remove('active'));
-      btn.classList.add('active');
+      showFlowPopChart(routeInfo.route, index);
+      addActiveClassOnBtnUsingWeekDay(index);
     };
   })
 }
+function addActiveClassOnBtnUsingWeekDay(weekday){
+  const btnList = document.querySelectorAll('.day-btn-grp > *');
+  btnList.forEach(button => button.classList.remove('active'));
+  btnList.item(weekday).classList.add('active');
+}
+
 
 const chartDiv = document.getElementById("chart");
 let popChart;
