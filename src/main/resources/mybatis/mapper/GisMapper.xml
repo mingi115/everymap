@@ -84,13 +84,17 @@
       )
   </select>
   <select id="selectFloatingPopHeatmapPoints" parameterType="hashMap" resultType="hashMap">
-    select fp_stat.total_pop, fp_stat.cell_id, st_astext(st_centroid(cell.geometry)) as geom
+    select fp_stat.total_pop, fp_stat.cell_id, st_astext(cell.geometry) as geom
     from floating_population_stat fp_stat,
          (select cell_id, geometry
           from floating_population_cell fp_cell
           where st_intersects(
                   fp_cell.geometry,
-                  st_geomfromtext(#{route})
+                  st_buffer(
+                    st_geomfromtext(#{route})
+                    ,0.002
+                    ,'endcap=square'
+                  )
                 )
          ) as cell
     where fp_stat.cell_id = cell.cell_id

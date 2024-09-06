@@ -9,12 +9,40 @@ const baseLayer = new ol.layer.Tile({ //타일 생성
   })
 });
 
+const colors = [
+  { min: 0.04, max: 0.1, color: '#FFFFFF80' },
+  { min: 0.1, max: 0.5, color: '#FFEEEE80' },
+  { min: 0.5, max: 2, color: '#FFCCCC80' },
+  { min: 2, max: 5, color: '#FFAAAA80' },
+  { min: 5, max: 20, color: '#FF888880' },
+  { min: 20, max: 50, color: '#FF666680' },
+  { min: 50, max: 200, color: '#FF444480' },
+  { min: 200, max: 500, color: '#FF222280' },
+  { min: 500, max: 2000, color: '#FF000080' },
+  { min: 2000, max: 3945, color: '#CC000080' }
+];
+
+const styleFunction = (feature) => {
+  const value = feature.get('population'); // feature의 인구 데이터 속성값
+  let color = '#000000'; // 기본 색상 (데이터가 구간에 없을 경우)
+  
+  // 각 구간에 맞는 색상 찾기
+  for (let i = 0; i < colors.length; i++) {
+    if (value >= colors[i].min && value < colors[i].max) {
+      color = colors[i].color;
+      break;
+    }
+  }
+  return new ol.style.Style({
+    fill: new ol.style.Fill({
+      color: color
+    }),
+  });
+};
 const heamapSource = new ol.source.Vector();
-const heatmapLayer = new ol.layer.Heatmap({
+const heatmapLayer = new ol.layer.VectorImage({
   source : heamapSource,
-  weight: function (feature) {
-    return feature.get('weight') * 10;
-  },
+  style : styleFunction
 });
 const vectorSource = new ol.source.Vector();
 const vectorLayer = new ol.layer.Vector({
@@ -87,8 +115,8 @@ function addHeatmapPoint(heatmapPointList){
   for(const poi of heatmapPointList) {
     const pointFeature = new ol.Feature({
       geometry: wktFormatter.readFeature(poi.geom).getGeometry(),
-      weight:poi.total_pop
     });
+    pointFeature.setProperties({'population': poi.total_pop});
     heamapSource.addFeature(pointFeature);
   }
 }
