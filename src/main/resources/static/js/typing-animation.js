@@ -67,11 +67,13 @@ function addLoadingChatCard(){
         backDelay: 100,
         onLastStringBackspaced  : () =>  document.querySelector('#chat-loading').innerHTML = '▪'
       });
+  cardWrapperScrollToBottom();
 }
 function deleteLoadingChatCard(){
   if(loadingChatCard) {
     loadingTyped.destroy();
-    loadingChatCard.remove()
+    loadingChatCard.remove();
+    loadingChatCard=null;
   }
 }
 
