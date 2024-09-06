@@ -43,6 +43,7 @@ dependencies {
 	implementation 'org.springframework.ai:spring-ai-azure-openai-spring-boot-starter'
 	implementation "me.paulschwarz:spring-dotenv:3.0.0"
 
+	developmentOnly 'org.springframework.boot:spring-boot-devtools:3.3.2'
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'

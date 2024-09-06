@@ -1,25 +1,4 @@
 spring.config.activate.on-profile: prod
-spring:
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: ${DATASOURCE_URL}
-    username: ${DATASOURCE_USERNAME}
-    password: ${DATASOURCE_PASSWORD}
-
-  ai:
-    azure:
-      openai:
-        api-key: ${SPRING_AI_AZURE_OPENAI_API_KEY}
-        endpoint: ${SPRING_AI_AZURE_OPENAI_ENDPOINT}
-        chat:
-          options:
-            deployment-name: ${SPRING_AI_AZURE_OPENAI_DEPLOYMENT_NAME}
-            model-name: ${SPRING_AI_AZURE_OPENAI_MODEL_NAME}
-
-app:
-  vworld:
-    key: ${VWORLD_API_KEY}
-
 
 logging.level.root : info
 logging:

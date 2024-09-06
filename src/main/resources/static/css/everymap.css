@@ -10,7 +10,7 @@ body {
 }
 #map{
   z-index: 0;
-  width: 80vw;
+  width: 100vw;
   height: 100vh;
 }
 .btn-grp{
@@ -41,4 +41,18 @@ body {
 .overlay{
   background-color: white;
   border: 1px solid;
+}
+
+.card-body-wrapper{
+  height: calc(100vh - 270px - 56px - 20px);
+  overflow-y: scroll;
+}
+#chart{
+  height: 200px;
+}
+.chart-wrapper{
+  height: 250px;
+}
+.day-btn-grp{
+  text-align: center;
 }
