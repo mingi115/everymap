@@ -25,7 +25,7 @@ const colors = [
 const styleFunction = (feature) => {
   const value = feature.get('population'); // feature의 인구 데이터 속성값
   let color = '#000000'; // 기본 색상 (데이터가 구간에 없을 경우)
-  
+
   // 각 구간에 맞는 색상 찾기
   for (let i = 0; i < colors.length; i++) {
     if (value >= colors[i].min && value < colors[i].max) {
@@ -78,7 +78,7 @@ async function addPointOnMap(e){
     clearWindow();
   }
   pointArr.push(e.coordinate);
-  addPoint(e.coordinate);
+  addStartEndPoint(e.coordinate);
 
   if(pointArr.length >= 2){
     showLodingImg();
@@ -181,19 +181,34 @@ function addRouteOnMap(lsList){
   })
 }
 
-function addPoint(coord){
+function addStartEndPoint(coord){
   const pointFeature = new ol.Feature({
     geometry: new ol.geom.Point(coord),
   });
   pointFeature.setStyle(
       [
         new ol.style.Style({
-          image: new ol.style.Circle({
-            radius: 7,
+          // image: new ol.style.Circle({
+          //   radius: 7,
+          //   fill: new ol.style.Fill({
+          //     color: '#0099FF',
+          //   }),
+          // })
+          image: new ol.style.Icon({
+            color: pointArr.length === 1 ? '#44c565' : '#e53d5d',
+            anchor: [0.5, 40],
+            anchorXUnits: 'fraction',
+            anchorYUnits: 'pixels',
+            src: '/image/marker.svg',
+          }),
+          text: new ol.style.Text({
+            text: pointArr.length === 1 ? '출발' : '도착',
+            offsetY: -25,
             fill: new ol.style.Fill({
-              color: '#0099FF',
-            }),
-        })})
+              color: '#FFF',
+            })
+          })
+        })
       ]
   );
   vectorSource.addFeature(pointFeature);
