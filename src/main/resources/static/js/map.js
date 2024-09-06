@@ -188,12 +188,6 @@ function addStartEndPoint(coord){
   pointFeature.setStyle(
       [
         new ol.style.Style({
-          // image: new ol.style.Circle({
-          //   radius: 7,
-          //   fill: new ol.style.Fill({
-          //     color: '#0099FF',
-          //   }),
-          // })
           image: new ol.style.Icon({
             color: pointArr.length === 1 ? '#44c565' : '#e53d5d',
             anchor: [0.5, 40],
@@ -221,36 +215,36 @@ function addObstaclePOIOnMap(obstaclePoiList){
     });
 
     pointFeature.setProperties({'poiInfo': poi});
-    pointFeature.setStyle(
-        [
-          new ol.style.Style({
-            image: new ol.style.Circle({
-              radius: 6,
-              fill: new ol.style.Fill({
-                color: stringToColour(poi.category),
-              }),
-            })
-          })
-        ]
-    );
+    pointFeature.setStyle(makeObstaclePoiStyle(poi.category));
     vectorSource.addFeature(pointFeature);
   }
 }
 
-function stringToColour(str) {
-  let hash = 0;
-  str.split('').forEach(char => {
-    hash = char.charCodeAt(0) + ((hash << 5) - hash)
-  })
-  let colour = '#'
-  for (let i = 0; i < 3; i++) {
-    const value = (hash >> (i * 8)) & 0xff
-    colour += value.toString(16).padStart(2, '0')
+function makeObstaclePoiStyle(category){
+  let style;
+  if(category === '빗물받이'){
+    style = new ol.style.Style({
+      image: new ol.style.Icon({
+        src: '/image/rain_gutter.png',
+      })
+    })
   }
-  return colour
+  else if(category === '맨홀'){
+    style = new ol.style.Style({
+      image: new ol.style.Icon({
+        src: '/image/manhole.png',
+      })
+    })
+  }
+  else if(category === '과속방지턱'){
+    style = new ol.style.Style({
+      image: new ol.style.Icon({
+        src: '/image/speed_bump.png',
+      })
+    })
+  }
+  return style;
 }
-
-
 
 function convertCoordinateToWKTFormat(coord){
   const point = new ol.geom.Point(coord);
