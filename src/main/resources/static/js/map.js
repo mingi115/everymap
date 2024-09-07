@@ -185,17 +185,25 @@ function addRouteOnMap(lsList){
     if(item.slope_max > 6){
       color = '#Ff0000';
     }else if (item.slope_max > 3){
-      color = '#ff8400';
+      color = '#ffa600';
     }else{
       color = '#55ff00';
     }
     feature.setStyle(
-        new ol.style.Style({
-          stroke: new ol.style.Stroke({
-            color: color,
-            width: 5,
-          })
-        })
+        [
+          new ol.style.Style({
+            stroke: new ol.style.Stroke({
+              color: '#000',
+              width: 6,
+            })
+          }),
+          new ol.style.Style({
+            stroke: new ol.style.Stroke({
+              color: color,
+              width: 5,
+            })
+          }),
+        ]
     );
     vectorSource.addFeature(feature);
   })
