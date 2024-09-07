@@ -1,4 +1,4 @@
-let routeInfo ={};
+let routeInfo;
 const wktFormatter = new ol.format.WKT();
 const baseLayer = new ol.layer.Tile({ //타일 생성
   title : 'Vworld Map', //이름
@@ -63,36 +63,81 @@ const map = new ol.Map({
   target: 'map',
 });
 
+const rClickOverlay = new ol.Overlay({
+  positioning: 'top-left',
+  stopEvent: true
+});
+function makeRClickOverlayDom(){
+  const overlayContainer = document.createElement('div');
+  overlayContainer.className = 'ol-overlay-container';
+  overlayContainer.style.background = 'white';
+  const startMarker = document.createElement('div');
+  startMarker.innerHTML = '<svg  fill="#44c565" width="15px" height="15px" viewBox="0 0 15 15" version="1.1" id="marker" xmlns="http://www.w3.org/2000/svg">\n'
+      + '  <path d="M7.5,0C5.0676,0,2.2297,1.4865,2.2297,5.2703&#xA;&#x9;C2.2297,7.8378,6.2838,13.5135,7.5,15c1.0811-1.4865,5.2703-7.027,5.2703-9.7297C12.7703,1.4865,9.9324,0,7.5,0z"/>\n'
+      + '</svg>'
+  const startDiv = document.createElement('div');
+  startDiv.appendChild(startMarker);
+  startDiv.id = 'overlay-start-btn';
+  startDiv.style.border = '1px solid black';
+  startDiv.style.cursor = 'pointer';
+  startDiv.style.display = 'flex';
+  startDiv.innerHTML += '출발';
+  const endMarker = document.createElement('div');
+  endMarker.innerHTML = '<svg  fill="#e53d5d" width="15px" height="15px" viewBox="0 0 15 15" version="1.1" id="marker" xmlns="http://www.w3.org/2000/svg">\n'
+      + '  <path d="M7.5,0C5.0676,0,2.2297,1.4865,2.2297,5.2703&#xA;&#x9;C2.2297,7.8378,6.2838,13.5135,7.5,15c1.0811-1.4865,5.2703-7.027,5.2703-9.7297C12.7703,1.4865,9.9324,0,7.5,0z"/>\n'
+      + '</svg>'
+  const endDiv = document.createElement('div');
+  endDiv.id = 'overlay-end-btn';
+  endDiv.appendChild(endMarker);
+  endDiv.style.border = '1px solid black';
+  endDiv.style.display = 'flex';
+  endDiv.style.cursor = 'pointer';
+  endDiv.innerHTML += '도착';
+  overlayContainer.appendChild(startDiv);
+  overlayContainer.appendChild(endDiv);
+
+  return overlayContainer;
+}
+map.on('contextmenu', function(e){
+  e.preventDefault();
+  map.removeOverlay(rClickOverlay);
+  rClickOverlay.setElement(makeRClickOverlayDom());
+  const coordinate = e.coordinate;
+  rClickOverlay.setPosition(coordinate);
+  map.addOverlay(rClickOverlay);
+  const startBtn = document.getElementById('overlay-start-btn');
+  startBtn.addEventListener('click', ()=>addStartEndPoint(coordinate, true));
+  const endBtn  = document.getElementById('overlay-end-btn');
+  endBtn.addEventListener('click', ()=>addStartEndPoint(coordinate, false));
+})
 function clearWindow(){
   vectorSource.clear();
   heamapSource.clear();
-  routeInfo={};
+  routeInfo=null;
   if(popChart){
     popChart.destroy();
   }
 }
 
-let pointArr =[];
-async function addPointOnMap(e){
-  if(pointArr.length === 0){
-    clearWindow();
+document.getElementById('find-route').addEventListener('click', getRouteInfo)
+async function getRouteInfo(){
+  if(!startPoint || !endPoint)  {
+    alert('출발지와 도착지를 선택해 주세요.');
+    return;
   }
-  pointArr.push(e.coordinate);
-  addStartEndPoint(e.coordinate);
+  const startCoord = startPoint.getGeometry().getCoordinates();
+  const endCoord = endPoint.getGeometry().getCoordinates();
 
-  if(pointArr.length >= 2){
-    showLodingImg();
-    routeInfo= await fetchShortestPath(pointArr[0], pointArr[pointArr.length-1])
-    hideLodingImg();
-    pointArr=[];
-    addLinkToPath(routeInfo.pathToLink);
-    addRouteOnMap(routeInfo.lsList);
-    addObstaclePOIOnMap(routeInfo.obstaclePoiList);
-    addHeatmapPoint(routeInfo.heatmapPointList);
-    addPathSummerization();
-    addActiveClassOnBtnUsingWeekDay(new Date().getDay());
-    await showFlowPopChart(routeInfo.route, new Date().getDay());
-  }
+  showLodingImg();
+  routeInfo= await fetchShortestPath(startCoord, endCoord)
+  hideLodingImg();
+  addLinkToPath(routeInfo.pathToLink);
+  addRouteOnMap(routeInfo.lsList);
+  addObstaclePOIOnMap(routeInfo.obstaclePoiList);
+  addHeatmapPoint(routeInfo.heatmapPointList);
+  addPathSummerization();
+  addActiveClassOnBtnUsingWeekDay(new Date().getDay());
+  await showFlowPopChart(routeInfo.route, new Date().getDay());
 }
 
 function addLinkToPath(pathToLink){
@@ -146,6 +191,7 @@ const overlayDom = document.createElement("div");
 overlayDom.className = "overlay";
 let overlay;
 function mapClickEvt(e){
+  map.removeOverlay(rClickOverlay);
   if(overlay){
     map.removeOverlay(overlay);
     overlay=null;
@@ -168,8 +214,6 @@ function mapClickEvt(e){
 
       overlay.setPosition(feature.getGeometry().getCoordinates());
       map.addOverlay(overlay);
-    }else{
-      addPointOnMap(e);
     }
   })
 }
@@ -209,7 +253,18 @@ function addRouteOnMap(lsList){
   })
 }
 
-function addStartEndPoint(coord){
+let startPoint;
+let endPoint;
+function addStartEndPoint(coord, isStart){
+  if(routeInfo) clearWindow();
+  map.removeOverlay(rClickOverlay);
+  if(isStart){
+    vectorSource.removeFeature(startPoint);
+    startPoint=null;
+  }else{
+    vectorSource.removeFeature(endPoint);
+    endPoint=null;
+  }
   const pointFeature = new ol.Feature({
     geometry: new ol.geom.Point(coord),
   });
@@ -217,14 +272,14 @@ function addStartEndPoint(coord){
       [
         new ol.style.Style({
           image: new ol.style.Icon({
-            color: pointArr.length === 1 ? '#44c565' : '#e53d5d',
+            color: isStart ? '#44c565' : '#e53d5d',
             anchor: [0.5, 40],
             anchorXUnits: 'fraction',
             anchorYUnits: 'pixels',
             src: '/image/marker.svg',
           }),
           text: new ol.style.Text({
-            text: pointArr.length === 1 ? '출발' : '도착',
+            text: isStart ? '출발' : '도착',
             offsetY: -25,
             fill: new ol.style.Fill({
               color: '#FFF',
@@ -234,6 +289,12 @@ function addStartEndPoint(coord){
       ]
   );
   vectorSource.addFeature(pointFeature);
+
+  if(isStart){
+    startPoint=pointFeature;
+  }else{
+    endPoint=pointFeature;
+  }
 }
 
 function addObstaclePOIOnMap(obstaclePoiList){
@@ -423,7 +484,7 @@ function showRoadview(e){
 function closeRoadviewMode(){
   isRoadviewMode = false;
   roadviewModal.style.zIndex = '2';
-  map.on('click', addPointOnMap);
+
   roadviewSource.clear();
   map.removeLayer(roadviewLayer);
 }
