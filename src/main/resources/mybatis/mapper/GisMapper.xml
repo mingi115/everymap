@@ -121,4 +121,25 @@
     group by fp_stat.time
     order by time
   </select>
+  <select id="selectPathToLink" parameterType="hashMap" resultType="hashMap">
+
+      (select st_astext(st_makeline(geom, st_geomfromtext(#{startCoord}, 4326))) as path_to_link
+       from test.pedestrian_node
+       where st_dwithin(geom,
+                        st_geometryfromtext(#{startCoord}, 4326),
+                        30000, false)
+       ORDER BY ST_Distance(geom,
+                            st_geometryfromtext(#{startCoord}, 4326))
+       limit 1)
+      Union All
+      (select st_astext(st_makeline(geom, st_geomfromtext(#{endCoord}, 4326))) as end_to_link
+       from test.pedestrian_node
+       where st_dwithin(geom,
+                        st_geometryfromtext(#{endCoord}, 4326),
+                        30000, false)
+       ORDER BY ST_Distance(geom,
+                            st_geometryfromtext(#{endCoord}, 4326))
+       limit 1)
+
+  </select>
 </mapper>

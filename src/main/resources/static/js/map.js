@@ -85,6 +85,7 @@ async function addPointOnMap(e){
     routeInfo= await fetchShortestPath(pointArr[0], pointArr[pointArr.length-1])
     hideLodingImg();
     pointArr=[];
+    addLinkToPath(routeInfo.pathToLink);
     addRouteOnMap(routeInfo.lsList);
     addObstaclePOIOnMap(routeInfo.obstaclePoiList);
     addHeatmapPoint(routeInfo.heatmapPointList);
@@ -92,6 +93,25 @@ async function addPointOnMap(e){
     addActiveClassOnBtnUsingWeekDay(new Date().getDay());
     await showFlowPopChart(routeInfo.route, new Date().getDay());
   }
+}
+
+function addLinkToPath(pathToLink){
+  pathToLink.forEach((item, i)=>{
+    const routeGeom = wktFormatter.readFeature(item.path_to_link).getGeometry();
+    const feature = new ol.Feature({
+      geometry: routeGeom
+    });
+    feature.setStyle(
+        new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            lineDash : [0,0,0,10],
+            color: '#7e7e7e',
+            width: 5,
+          })
+        })
+    );
+    vectorSource.addFeature(feature);
+  })
 }
 
 function addPathSummerization(){

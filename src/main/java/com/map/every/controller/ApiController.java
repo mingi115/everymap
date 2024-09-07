@@ -33,6 +33,8 @@ public class ApiController {
         throws ParseException {
         log.debug(paramMap.toString());
         HashMap<String, Object> result = new HashMap<>();
+        List<HashMap<String, Object>> pathToLink = gisService.getPathToLink(paramMap);
+        result.put("pathToLink", pathToLink);
         List<HashMap<String, Object>> lsList = gisService.getShortestPathLineList(paramMap);
         result.put("lsList", lsList);
 

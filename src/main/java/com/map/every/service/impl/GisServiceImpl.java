@@ -66,4 +66,9 @@ public class GisServiceImpl implements GisService {
     public List<HashMap<String, Object>> getFloatingPopStatInRoute(Map<String, Object> paramMap) {
         return gisDAO.selectFloatingPopStatInRoute(paramMap);
     }
+
+    @Override
+    public List<HashMap<String, Object>> getPathToLink(Map<String, Object> paramMap) {
+        return gisDAO.selectPathToLink(paramMap);
+    }
 }
