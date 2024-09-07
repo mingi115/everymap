@@ -4,7 +4,7 @@ function showLodingImg(){
   loadingDiv.style.display = 'flex';
   const loadingImg = document.createElement('img');
   loadingImg.id = 'loading-img';
-  loadingImg.src = '/image/diable_loading.gif';
+  loadingImg.src = '/image/walking.gif';
   loadingImg.alt = '로딩이미지';
   loadingDiv.append(loadingImg);
 
