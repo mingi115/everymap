@@ -1,4 +1,6 @@
 let routeInfo;
+let safetyRouteInfo;
+let metRouteInfo;
 const wktFormatter = new ol.format.WKT();
 const baseLayer = new ol.layer.Tile({ //타일 생성
   title : 'Vworld Map', //이름
@@ -114,13 +116,18 @@ function clearWindow(){
   vectorSource.clear();
   heamapSource.clear();
   routeInfo=null;
+  safetyRouteInfo=null;
+  metRouteInfo=null;
   if(popChart){
     popChart.destroy();
   }
 }
 
-document.getElementById('find-route').addEventListener('click', getRouteInfo)
-async function getRouteInfo(){
+document.getElementById('find-route').addEventListener('click', ()=>getRouteInfo('shortest'));
+document.getElementById('shortest-path-btn').addEventListener('click', ()=>getRouteInfo('shortest'));
+document.getElementById('safety-path-btn').addEventListener('click', ()=>getRouteInfo('shortest'));
+document.getElementById('met-path-btn').addEventListener('click', ()=>getRouteInfo('shortest'));
+async function getRouteInfo(method){
   if(!startPoint || !endPoint)  {
     alert('출발지와 도착지를 선택해 주세요.');
     return;
@@ -129,16 +136,29 @@ async function getRouteInfo(){
   const endCoord = endPoint.getGeometry().getCoordinates();
 
   showLodingImg();
-  routeInfo= await fetchShortestPath(startCoord, endCoord)
+  if(method==='shortest'){
+    routeInfo= routeInfo ? routeInfo : await fetchShortestPath(startCoord, endCoord, method)
+    await fillRouteInfoUI(routeInfo);
+  }else if (method==='safety'){
+    safetyRouteInfo= safetyRouteInfo ? safetyRouteInfo : await fetchShortestPath(startCoord, endCoord, method)
+    await fillRouteInfoUI(safetyRouteInfo);
+  }else if(method === 'met'){
+    metRouteInfo= metRouteInfo ? metRouteInfo : await fetchShortestPath(startCoord, endCoord, method)
+    await fillRouteInfoUI(metRouteInfo);
+  }
   hideLodingImg();
-  addLinkToPath(routeInfo.pathToLink);
-  addRouteOnMap(routeInfo.lsList);
-  addObstaclePOIOnMap(routeInfo.obstaclePoiList);
-  addHeatmapPoint(routeInfo.heatmapPointList);
+}
+
+async function fillRouteInfoUI(info){
+  addLinkToPath(info.pathToLink);
+  addRouteOnMap(info.lsList);
+  addObstaclePOIOnMap(info.obstaclePoiList);
+  addHeatmapPoint(info.heatmapPointList);
   addPathSummerization();
   addActiveClassOnBtnUsingWeekDay(new Date().getDay());
-  await showFlowPopChart(routeInfo.route, new Date().getDay());
+  await showFlowPopChart(info.route, new Date().getDay());
 }
+
 
 function addLinkToPath(pathToLink){
   pathToLink.forEach((item, i)=>{
@@ -177,6 +197,7 @@ async function showFlowPopChart(route, weekday){
 }
 
 function addHeatmapPoint(heatmapPointList){
+  heamapSource.clear();
   for(const poi of heatmapPointList) {
     const pointFeature = new ol.Feature({
       geometry: wktFormatter.readFeature(poi.geom).getGeometry(),
@@ -220,6 +241,7 @@ function mapClickEvt(e){
 
 
 function addRouteOnMap(lsList){
+
   lsList.forEach((item, i)=>{
     const routeGeom = wktFormatter.readFeature(item.wktgeom).getGeometry();
     const feature = new ol.Feature({
@@ -360,6 +382,9 @@ function addActiveClassOnBtnUsingWeekDay(weekday){
 const chartDiv = document.getElementById("chart");
 let popChart;
 function makeFlowPopChart(floatingPopStat){
+  if(popChart){
+    popChart.destroy();
+  }
   const dataSeries = floatingPopStat.map(item => item.avg);
   const peakIndex = dataSeries.indexOf(Math.max(...dataSeries));
 

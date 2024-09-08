@@ -1,11 +1,11 @@
-function fetchShortestPath(startCoord, endCoord){
+function fetchShortestPath(startCoord, endCoord, method){
   const params = new URLSearchParams({
     startCoord : convertCoordinateToWKTFormat(startCoord),
     endCoord : convertCoordinateToWKTFormat(endCoord),
     weekday : 5,
     time : new Date().getHours()
   })
-  return fetch(`/api/getShortestPath?${params.toString()}`, {
+  return fetch(`/api/getShortestPath/${method}?${params.toString()}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

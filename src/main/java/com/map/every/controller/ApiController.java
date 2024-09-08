@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.Mapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,14 +29,25 @@ public class ApiController {
     private final GisService gisService;
     private final OpenaiService openaiService;
 
-    @GetMapping(value = "/getShortestPath")
-    public HashMap<String, Object> getShortestPath(@RequestParam Map<String, Object> paramMap)
+    @GetMapping(value = "/getShortestPath/{method}")
+    public HashMap<String, Object> getShortestPath(
+        @RequestParam Map<String, Object> paramMap,
+        @PathVariable("method") String method )
         throws ParseException {
         log.debug(paramMap.toString());
         HashMap<String, Object> result = new HashMap<>();
         List<HashMap<String, Object>> pathToLink = gisService.getPathToLink(paramMap);
         result.put("pathToLink", pathToLink);
-        List<HashMap<String, Object>> lsList = gisService.getShortestPathLineList(paramMap);
+
+        List<HashMap<String, Object>> lsList;
+        if(method.equals("safety")){
+            lsList = gisService.getShortestPathLineList(paramMap);
+        }else if(method.equals("met")){
+            lsList = gisService.getShortestPathLineList(paramMap);
+        }else{
+            lsList = gisService.getShortestPathLineList(paramMap);
+        }
+
         result.put("lsList", lsList);
 
         String route = gisService.mergeLinestringList(lsList);
