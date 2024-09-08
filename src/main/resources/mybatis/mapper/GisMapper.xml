@@ -87,11 +87,11 @@
     select fp_stat.total_pop, fp_stat.cell_id, st_astext(cell.geometry) as geom
     from floating_population_stat fp_stat,
          (select cell_id, geometry
-          from floating_population_cell fp_cell
+          from test.floating_population_cell fp_cell
           where st_intersects(
                   fp_cell.geometry,
                   st_buffer(
-                    st_geomfromtext(#{route})
+                    st_geomfromtext(#{route}, 4326)
                     ,0.002
                     ,'endcap=square'
                   )
@@ -108,11 +108,11 @@
     from floating_population_stat fp_stat
            right join
          (select cell_id, geometry, timeseries.time
-          from floating_population_cell fp_cell,
+          from test.floating_population_cell fp_cell,
                (select generate_series(0,23) as time) timeseries
           where st_intersects(
                   fp_cell.geometry,
-                  st_geomfromtext(#{route})
+                  st_geomfromtext(#{route}, 4326)
                 )
          ) as cell
          on cell.time=fp_stat.time and fp_stat.cell_id = cell.cell_id
