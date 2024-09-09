@@ -41,9 +41,9 @@ public class ApiController {
 
         List<HashMap<String, Object>> lsList;
         if(method.equals("safety")){
-            lsList = gisService.getShortestPathLineList(paramMap);
+            lsList = gisService.getSafetyPathLineList(paramMap);
         }else if(method.equals("met")){
-            lsList = gisService.getShortestPathLineList(paramMap);
+            lsList = gisService.getMetPathLineList(paramMap);
         }else{
             lsList = gisService.getShortestPathLineList(paramMap);
         }

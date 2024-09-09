@@ -142,4 +142,83 @@
        limit 1)
 
   </select>
+  <select id="selectMetPath" parameterType="hashMap" resultType="hashMap">
+    select pl.link_id,
+           st_astext(pl.geom) as wktgeom,
+           plss.slope_count,
+           plss.slope_median,
+           plss.slope_min,
+           plss.slope_max
+    from pgr_dijkstra('select
+              pl.link_id::bigint as id,
+              from_node_id::bigint as source,
+              to_node_id::bigint as target,
+              (link_len * ((3.5 + (plss.slope_avg * 1.8))/3.5))::double precision as cost
+              from
+              pedestrian_link pl,
+              pedestrian_link_slope_stat plss
+              where
+                  pl.link_id = plss.link_id'::text,
+                      (select node_id::bigint
+                       from test.pedestrian_node
+                       where st_dwithin(geom,
+                                        st_geometryfromtext(#{startCoord}, 4326),
+                                        30000, false)
+                       ORDER BY ST_Distance(geom,
+                                            st_geometryfromtext(#{startCoord}, 4326))
+                        limit 1),
+                            (select node_id::bigint
+                             from test.pedestrian_node
+                             where st_dwithin(geom,
+                                              st_geometryfromtext(#{endCoord}, 4326),
+                                              30000, false)
+                             ORDER BY ST_Distance(geom,
+                                                  st_geometryfromtext(#{endCoord}, 4326))
+                             limit 1), false) as pgr,
+         pedestrian_link pl,
+         pedestrian_link_slope_stat plss
+    where edge = pl.link_id
+      and plss.link_id = pl.link_id
+  </select>
+  <select id="selectSafetyPath" parameterType="hashMap" resultType="hashMap">
+    <![CDATA[
+    select pl.link_id,
+           st_astext(pl.geom) as wktgeom,
+           plss.slope_count,
+           plss.slope_median,
+           plss.slope_min,
+           plss.slope_max
+    from pgr_dijkstra('select
+              pl.link_id::bigint as id,
+              from_node_id::bigint as source,
+              to_node_id::bigint as target,
+              (link_len * ((3.5 + (plss.slope_avg * 1.8))/3.5))::double precision as cost
+              from
+              pedestrian_link pl,
+              pedestrian_link_slope_stat plss
+              where
+                  pl.link_id = plss.link_id
+                  and plss.slope_max < 6  '::text,
+                      (select node_id::bigint
+                       from test.pedestrian_node
+                       where st_dwithin(geom,
+                                        st_geometryfromtext(#{startCoord}, 4326),
+                                        30000, false)
+                       ORDER BY ST_Distance(geom,
+                                            st_geometryfromtext(#{startCoord}, 4326))
+                        limit 1),
+                            (select node_id::bigint
+                             from test.pedestrian_node
+                             where st_dwithin(geom,
+                                              st_geometryfromtext(#{endCoord}, 4326),
+                                              30000, false)
+                             ORDER BY ST_Distance(geom,
+                                                  st_geometryfromtext(#{endCoord}, 4326))
+                             limit 1), false) as pgr,
+         pedestrian_link pl,
+         pedestrian_link_slope_stat plss
+    where edge = pl.link_id
+      and plss.link_id = pl.link_id
+    ]]>
+  </select>
 </mapper>

@@ -14,4 +14,8 @@ public interface GisMapper {
     List<HashMap<String, Object>> selectFloatingPopStatInRoute(Map<String, Object> paramMap);
 
     List<HashMap<String, Object>> selectPathToLink(Map<String, Object> paramMap);
+
+    List<HashMap<String, Object>> selectMetPath(Map<String, Object> paramMap);
+
+    List<HashMap<String, Object>> selectSafetyPath(Map<String, Object> paramMap);
 }

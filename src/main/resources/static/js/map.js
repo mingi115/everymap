@@ -123,15 +123,44 @@ function clearWindow(){
   }
 }
 
-document.getElementById('find-route').addEventListener('click', ()=>getRouteInfo('shortest'));
-document.getElementById('shortest-path-btn').addEventListener('click', ()=>getRouteInfo('shortest'));
-document.getElementById('safety-path-btn').addEventListener('click', ()=>getRouteInfo('shortest'));
-document.getElementById('met-path-btn').addEventListener('click', ()=>getRouteInfo('shortest'));
+document.getElementById('find-route').addEventListener('click', async ()=>{
+  document.getElementById('shortest-path-btn').click();
+});
+document.getElementById('shortest-path-btn').addEventListener('click', async (e)=>{
+  await getRouteInfo('shortest');
+  if(routeInfo){
+    routeSelectEvt(e);
+  }
+});
+document.getElementById('safety-path-btn').addEventListener('click', async (e)=>{
+  await getRouteInfo('safety');
+  if(safetyRouteInfo){
+    routeSelectEvt(e);
+  }
+});
+document.getElementById('met-path-btn').addEventListener('click', async (e)=>{
+  await getRouteInfo('met');
+  if(metRouteInfo){
+    routeSelectEvt(e);
+  }
+});
+
+function routeSelectEvt(e){
+  document.querySelectorAll('.accordion-button').forEach(item =>{
+    item.classList.add('collapsed');
+  })
+  document.querySelectorAll('.accordion-collapse').forEach(item =>{
+    item.classList.add('collapse');
+  })
+  e.target.classList.remove('collapsed');
+  e.target.parentNode.parentNode.lastElementChild.classList.remove('collapse');
+}
 async function getRouteInfo(method){
   if(!startPoint || !endPoint)  {
     alert('출발지와 도착지를 선택해 주세요.');
     return;
   }
+
   const startCoord = startPoint.getGeometry().getCoordinates();
   const endCoord = endPoint.getGeometry().getCoordinates();
 
@@ -139,22 +168,25 @@ async function getRouteInfo(method){
   if(method==='shortest'){
     routeInfo= routeInfo ? routeInfo : await fetchShortestPath(startCoord, endCoord, method)
     await fillRouteInfoUI(routeInfo);
+    addPathSummerization('shortest');
   }else if (method==='safety'){
     safetyRouteInfo= safetyRouteInfo ? safetyRouteInfo : await fetchShortestPath(startCoord, endCoord, method)
     await fillRouteInfoUI(safetyRouteInfo);
+    addPathSummerization('safety');
   }else if(method === 'met'){
     metRouteInfo= metRouteInfo ? metRouteInfo : await fetchShortestPath(startCoord, endCoord, method)
     await fillRouteInfoUI(metRouteInfo);
+    addPathSummerization('met');
   }
   hideLodingImg();
 }
 
 async function fillRouteInfoUI(info){
-  addLinkToPath(info.pathToLink);
   addRouteOnMap(info.lsList);
+  addLinkToPath(info.pathToLink);
   addObstaclePOIOnMap(info.obstaclePoiList);
   addHeatmapPoint(info.heatmapPointList);
-  addPathSummerization();
+
   addActiveClassOnBtnUsingWeekDay(new Date().getDay());
   await showFlowPopChart(info.route, new Date().getDay());
 }
@@ -179,12 +211,16 @@ function addLinkToPath(pathToLink){
   })
 }
 
-function addPathSummerization(){
+function addPathSummerization(method){
   addLoadingChatCard();
-  fetchAiPathSummarization(makePromptParam()).then(result=>{
+  const promptParam = makePromptParam();
+  fetchAiPathSummarization(promptParam).then(result=>{
     deleteLoadingChatCard();
     addNewChatCard(result.pathInfo);
   });
+
+  let targetInfoContent =document.getElementById(`${method}-info-content`);
+  targetInfoContent.innerHTML = parsingPromptParam(promptParam);
 }
 
 async function showFlowPopChart(route, weekday){
@@ -241,7 +277,12 @@ function mapClickEvt(e){
 
 
 function addRouteOnMap(lsList){
-
+  const features = vectorSource.getFeatures();
+  features.forEach(feat =>{
+    if(feat.getGeometry().getType() === 'LineString'){
+      vectorSource.removeFeature(feat);
+    }
+  })
   lsList.forEach((item, i)=>{
     const routeGeom = wktFormatter.readFeature(item.wktgeom).getGeometry();
     const feature = new ol.Feature({
@@ -438,9 +479,9 @@ function makeFlowPopChart(floatingPopStat){
 function makePromptParam(){
   const heatmapPointList = routeInfo.heatmapPointList;
   const popValues = heatmapPointList.map(item => item.total_pop);
-  const current = popValues.reduce((a, b) => a + b, 0) / popValues.length;
-  const quite = Math.min(...popValues);
-  const crowded = Math.max(...popValues);
+  const current = (popValues.reduce((a, b) => a + b, 0) / popValues.length).toFixed(1);
+  const quite = Math.min(...popValues).toFixed(1);
+  const crowded = Math.max(...popValues).toFixed(1);
   const floating_population ={
     current, quite, crowded
   }
