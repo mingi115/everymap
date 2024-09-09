@@ -15,15 +15,16 @@
 
 </head>
 <body>
-  <!--<div id="info-tab">
-    <div class="info-contents-wrapper">
-      <h1>everymap</h1>
-      <canvas id="chart"></canvas>
-      <div id="prompt-result"></div>
-    </div>
-  </div>-->
   <div id="side-panel">
     <div class="side-content">
+      <div class="input-group mb-3">
+        <span class="input-group-text"  style="background-color: #44c565">출발</span>
+        <input id="start_input" type="text" class="form-control" placeholder="" aria-label="출발지" aria-describedby="start_input" readonly>
+      </div>
+      <div class="input-group mb-3">
+        <span class="input-group-text"  style="background-color: #e53d5d">도착</span>
+        <input id="end_input" type="text" class="form-control" placeholder="" aria-label="도착지" aria-describedby="end_input" readonly>
+      </div>
       <div class="accordion accordion-flush" id="accordionFlushExample">
         <div class="accordion-item">
           <h2 class="accordion-header">
@@ -116,6 +117,7 @@
   </div>
 
   <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a0dcca88f3f14dfb8b0363e1e86d3087"></script>
+  <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
   <script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script>

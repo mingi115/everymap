@@ -219,10 +219,86 @@ function addPathSummerization(method){
     addNewChatCard(result.pathInfo);
   });
 
-  let targetInfoContent =document.getElementById(`${method}-info-content`);
-  targetInfoContent.innerHTML = parsingPromptParam(promptParam);
+  parsingPromptParam(method, promptParam);
 }
 
+function parsingPromptParam(method, param){
+  const targetInfoContent =document.getElementById(`${method}-info-content`);
+  const fp = param.floating_population;
+
+  targetInfoContent.innerHTML='<div class="container"><ul class="list-group">';
+  if(fp.quite != null || fp.crowded !=null || fp.current !=null){
+    targetInfoContent.innerHTML += '유동인구 :<br>'
+  }
+  if(fp.quite != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최소 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.quite}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(fp.crowded != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최대 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.crowded}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(fp.current != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;평균 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.current}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(fp.quite != null || fp.crowded !=null || fp.current !=null){
+    targetInfoContent.innerHTML += '<br>'
+  }
+  const slp = param.slope;
+  if(slp.min != null || slp.max !=null || slp.avg !=null){
+    targetInfoContent.innerHTML += '경사도 :<br>'
+  }
+  if(slp.min != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최소 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.min}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(slp.max != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최대 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.max}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(slp.avg != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;평균 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.avg}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(slp.min != null || slp.max !=null || slp.avg !=null){
+    targetInfoContent.innerHTML += '<br>'
+  }
+  const ostc = param.obstacles;
+  if(ostc['맨홀'] != null || ostc['과속방지턱'] !=null || ostc['빗물받이'] !=null){
+    targetInfoContent.innerHTML += '위험요소 :<br>'
+  }
+  if(ostc['맨홀'] != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;맨홀 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['맨홀']}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(ostc['과속방지턱'] != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;과속방지턱 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['과속방지턱']}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(ostc['빗물받이'] != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;빗물받이 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['빗물받이']}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+}
 async function showFlowPopChart(route, weekday){
   if(!route) return;
   if(popChart){
@@ -323,6 +399,7 @@ function addStartEndPoint(coord, isStart){
   map.removeOverlay(rClickOverlay);
   if(isStart){
     vectorSource.removeFeature(startPoint);
+
     startPoint=null;
   }else{
     vectorSource.removeFeature(endPoint);
@@ -354,8 +431,10 @@ function addStartEndPoint(coord, isStart){
   vectorSource.addFeature(pointFeature);
 
   if(isStart){
+    startInput.value = coord.toString();
     startPoint=pointFeature;
   }else{
+    endInput.value = coord.toString();
     endPoint=pointFeature;
   }
 }
@@ -497,7 +576,7 @@ function makePromptParam(){
   const slope ={
     'min':minSlopeMin,
     'max':maxSlopeMax,
-    'avg': avgSlopeMedian,
+    'avg': avgSlopeMedian.toFixed(1),
     'safety_min': '4',
     'safety_max': '6'
   }
@@ -578,3 +657,42 @@ closeRoadviewBtn.addEventListener('click', function(){
 const roadview = new kakao.maps.Roadview(roadviewTarget);
 const roadviewClient = new kakao.maps.RoadviewClient();
 //roadview 끝
+
+const startInput = document.getElementById('start_input');
+startInput.addEventListener('click', (e) => {findAddress(e)});
+const endInput = document.getElementById('end_input');
+endInput.addEventListener('click', (e) => {findAddress(e)});
+
+function findAddress(e){
+  new daum.Postcode({
+    oncomplete: function(data) {
+
+      const myHeaders = new Headers();
+      myHeaders.append("Authorization", "KakaoAK 3c7304bbefd85b605b36ae4dfb2594c4");
+
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        redirect: "follow"
+      };
+
+      fetch(`https://dapi.kakao.com/v2/local/search/address.json?query=${data.address}`, requestOptions)
+      .then((response) => response.json())
+      .then((result) => result.documents[0].road_address)
+      .then((result) => {
+        const id = e.target.id
+        if(id === 'start_input'){
+          addStartEndPoint([result.x, result.y ], true);
+        }else{
+          addStartEndPoint([result.x, result.y ], false);
+        }
+        map.getView().setCenter([result.x, result.y ]);
+        e.target.value = result.region_3depth_name ? result.region_3depth_name+ " " :'';
+        e.target.value += result.building_name ? result.building_name+ " ":'';
+        e.target.value += result.main_building_no ? result.main_building_no : '';
+      })
+      .catch((error) => console.error(error));
+    }
+  }).open();
+
+}
