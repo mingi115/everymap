@@ -18,4 +18,10 @@ public interface GisMapper {
     List<HashMap<String, Object>> selectMetPath(List<HashMap<String, Object>> paramMap);
 
     List<HashMap<String, Object>> selectSafetyPath(List<HashMap<String, Object>> paramMap);
+
+    List<HashMap<String, Object>> selectAstarSafetyPath(List<HashMap<String, Object>> paramMap);
+
+    List<HashMap<String, Object>> selectAstarMetPath(List<HashMap<String, Object>> paramMap);
+
+    List<HashMap<String, Object>> selectAstarShortestPath(List<HashMap<String, Object>> paramMap);
 }

@@ -81,4 +81,22 @@ public class GisServiceImpl implements GisService {
     public List<HashMap<String, Object>> getSafetyPathLineList(List<HashMap<String, Object>> paramMap) {
         return gisDAO.selectSafetyPath(paramMap);
     }
+
+    @Override
+    public List<HashMap<String, Object>> getAstarSafetyPathLineList(
+        List<HashMap<String, Object>> paramMap) {
+        return gisDAO.selectAstarSafetyPath(paramMap);
+    }
+
+    @Override
+    public List<HashMap<String, Object>> getAstarMetPathLineList(
+        List<HashMap<String, Object>> paramMap) {
+        return gisDAO.selectAstarMetPath(paramMap);
+    }
+
+    @Override
+    public List<HashMap<String, Object>> getAstarShortestPathLineList(
+        List<HashMap<String, Object>> paramMap) {
+        return gisDAO.selectAstarShortestPath(paramMap);
+    }
 }

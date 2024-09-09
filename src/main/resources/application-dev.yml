@@ -1,8 +1,16 @@
 spring.config.activate.on-profile: dev
-logging.level.root : debug
+logging:
+  level:
+    org.apache.ibatis: DEBUG
+    root : debug
+
 spring:
   devtools:
     livereload:
       enabled: true
   thymeleaf:
     cache: false
+
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

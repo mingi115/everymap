@@ -1,6 +1,9 @@
 let routeInfo;
 let safetyRouteInfo;
 let metRouteInfo;
+let astarRouteInfo;
+let astarSafetyRouteInfo;
+let astarMetRouteInfo;
 const wktFormatter = new ol.format.WKT();
 const baseLayer = new ol.layer.Tile({ //타일 생성
   title : 'Vworld Map', //이름
@@ -145,6 +148,25 @@ document.getElementById('met-path-btn').addEventListener('click', async (e)=>{
   }
 });
 
+document.getElementById('astar-shortest-path-btn').addEventListener('click', async (e)=>{
+  await getAstarRouteInfo('astar-shortest');
+  if(astarRouteInfo){
+    routeSelectEvt(e);
+  }
+});
+document.getElementById('astar-safety-path-btn').addEventListener('click', async (e)=>{
+  await getAstarRouteInfo('astar-safety');
+  if(astarSafetyRouteInfo){
+    routeSelectEvt(e);
+  }
+});
+document.getElementById('astar-met-path-btn').addEventListener('click', async (e)=>{
+  await getAstarRouteInfo('astar-met');
+  if(astarMetRouteInfo){
+    routeSelectEvt(e);
+  }
+});
+
 function routeSelectEvt(e){
   document.querySelectorAll('.accordion-button').forEach(item =>{
     item.classList.add('collapsed');
@@ -168,16 +190,38 @@ async function getRouteInfo(method){
   if(method==='shortest'){
     routeInfo= routeInfo ? routeInfo : await fetchShortestPath(startCoord, endCoord, method)
     await fillRouteInfoUI(routeInfo);
-    addPathSummerization('shortest');
   }else if (method==='safety'){
     safetyRouteInfo= safetyRouteInfo ? safetyRouteInfo : await fetchShortestPath(startCoord, endCoord, method)
     await fillRouteInfoUI(safetyRouteInfo);
-    addPathSummerization('safety');
   }else if(method === 'met'){
     metRouteInfo= metRouteInfo ? metRouteInfo : await fetchShortestPath(startCoord, endCoord, method)
     await fillRouteInfoUI(metRouteInfo);
-    addPathSummerization('met');
   }
+  addPathSummerization(method);
+  hideLodingImg();
+}
+
+async function getAstarRouteInfo(method){
+  if(!startPoint || !endPoint)  {
+    alert('출발지와 도착지를 선택해 주세요.');
+    return;
+  }
+
+  const startCoord = startPoint.getGeometry().getCoordinates();
+  const endCoord = endPoint.getGeometry().getCoordinates();
+
+  showLodingImg();
+  if(method==='astar-shortest'){
+    astarRouteInfo= astarRouteInfo ? astarRouteInfo : await fetchAstarShortestPath(startCoord, endCoord, method)
+    await fillRouteInfoUI(astarRouteInfo);
+  }else if (method==='astar-safety'){
+    astarSafetyRouteInfo= astarSafetyRouteInfo ? astarSafetyRouteInfo : await fetchAstarShortestPath(startCoord, endCoord, method)
+    await fillRouteInfoUI(astarSafetyRouteInfo);
+  }else if(method === 'astar-met'){
+    astarMetRouteInfo= astarMetRouteInfo ? astarMetRouteInfo : await fetchAstarShortestPath(startCoord, endCoord, method)
+    await fillRouteInfoUI(astarMetRouteInfo);
+  }
+  addPathSummerization(method)
   hideLodingImg();
 }
 
@@ -213,7 +257,22 @@ function addLinkToPath(pathToLink){
 
 function addPathSummerization(method){
   addLoadingChatCard();
-  const promptParam = makePromptParam();
+  let info;
+  if(method === 'shortest'){
+    info = routeInfo;
+  }else if(method === 'safety'){
+    info = safetyRouteInfo;
+  }else if(method === 'met'){
+    info = metRouteInfo;
+  }else if(method === 'astar-shortest'){
+    info = astarRouteInfo;
+  }else if(method === 'astar-safety'){
+    info = astarSafetyRouteInfo;
+  }else if(method === 'astar-met'){
+    info = astarMetRouteInfo;
+  }
+
+  const promptParam = makePromptParam(info);
   fetchAiPathSummarization(promptParam).then(result=>{
     deleteLoadingChatCard();
     addNewChatCard(result.pathInfo);
@@ -555,8 +614,8 @@ function makeFlowPopChart(floatingPopStat){
     }
   });
 }
-function makePromptParam(){
-  const heatmapPointList = routeInfo.heatmapPointList;
+function makePromptParam(info){
+  const heatmapPointList = info.heatmapPointList;
   const popValues = heatmapPointList.map(item => item.total_pop);
   const current = (popValues.reduce((a, b) => a + b, 0) / popValues.length).toFixed(1);
   const quite = Math.min(...popValues).toFixed(1);
@@ -566,7 +625,7 @@ function makePromptParam(){
   }
 
   //slope 정보
-  const lsList = routeInfo.lsList;
+  const lsList = info.lsList;
   const slopeMinValues = lsList.map(item => item.slope_min);
   const slopeMedianValues = lsList.map(item => item.slope_median);
   const slopeMaxValues = lsList.map(item => item.slope_max);
@@ -581,7 +640,7 @@ function makePromptParam(){
     'safety_max': '6'
   }
 
-  const obstaclePoiList = routeInfo.obstaclePoiList;
+  const obstaclePoiList = info.obstaclePoiList;
   const obstacles = obstaclePoiList.reduce((acc, item) => {
     acc[item.category] = (acc[item.category] || 0) + 1;
     return acc;

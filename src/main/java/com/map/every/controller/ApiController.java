@@ -106,4 +106,35 @@ public class ApiController {
         result.put("floatingPopStat", fps);
         return result;
     }
+
+    @GetMapping(value = "/getAstarShortestPath/{method}")
+    public HashMap<String, Object> getAstarShortestPath(
+        @RequestParam Map<String, Object> paramMap,
+        @PathVariable("method") String method )
+        throws ParseException {
+        log.debug(paramMap.toString());
+        HashMap<String, Object> result = new HashMap<>();
+        List<HashMap<String, Object>> pathToLink = gisService.getPathToLink(paramMap);
+
+        result.put("pathToLink", pathToLink);
+        List<HashMap<String, Object>> lsList;
+        if(method.equals("safety")){
+            lsList = gisService.getAstarSafetyPathLineList(pathToLink);
+        }else if(method.equals("met")){
+            lsList = gisService.getAstarMetPathLineList(pathToLink);
+        }else{
+            lsList = gisService.getAstarShortestPathLineList(pathToLink);
+        }
+
+        result.put("lsList", lsList);
+        String route = gisService.mergeLinestringList(lsList);
+        paramMap.put("route", route);
+        result.put("route", route);
+        List<HashMap<String, Object>> op = gisService.getObstaclePOIInRoute(paramMap);
+        result.put("obstaclePoiList", op);
+
+        List<HashMap<String, Object>> hmpl = gisService.getFloatingPopHeatmapPoints(paramMap);
+        result.put("heatmapPointList", hmpl);
+        return result;
+    }
 }
