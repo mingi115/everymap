@@ -12,22 +12,8 @@
               link_len::double precision as cost
               from
               pedestrian_link'::text,
-                            (select node_id::bigint
-                             from test.pedestrian_node
-                             where st_dwithin(geom,
-                                              st_geometryfromtext(#{startCoord}, 4326),
-                                              30000, false)
-                             ORDER BY ST_Distance(geom,
-                                                  st_geometryfromtext(#{startCoord}, 4326))
-                             limit 1),
-                            (select node_id::bigint
-                             from test.pedestrian_node
-                             where st_dwithin(geom,
-                                              st_geometryfromtext(#{endCoord}, 4326),
-                                              30000, false)
-                             ORDER BY ST_Distance(geom,
-                                                  st_geometryfromtext(#{endCoord}, 4326))
-                             limit 1), false) as pgr,
+                            #{paramMap[0].node_id},
+                            #{paramMap[1].node_id}, false) as pgr,
                pedestrian_link pl
           where edge = pl.link_id) pgr
   </select>
@@ -45,22 +31,8 @@
               link_len::double precision as cost
               from
               pedestrian_link'::text,
-                            (select node_id::bigint
-                             from test.pedestrian_node
-                             where st_dwithin(geom,
-                                              st_geometryfromtext(#{startCoord}, 4326),
-                                              30000, false)
-                             ORDER BY ST_Distance(geom,
-                                                  st_geometryfromtext(#{startCoord}, 4326))
-                             limit 1),
-                            (select node_id::bigint
-                             from test.pedestrian_node
-                             where st_dwithin(geom,
-                                              st_geometryfromtext(#{endCoord}, 4326),
-                                              30000, false)
-                             ORDER BY ST_Distance(geom,
-                                                  st_geometryfromtext(#{endCoord}, 4326))
-                             limit 1), false) as pgr,
+                            #{paramMap[0].node_id},
+                            #{paramMap[1].node_id}, false) as pgr,
                pedestrian_link pl,
                pedestrian_link_slope_stat plss
           where edge = pl.link_id
@@ -122,8 +94,10 @@
     order by time
   </select>
   <select id="selectPathToLink" parameterType="hashMap" resultType="hashMap">
-
       (select st_astext(st_makeline(geom, st_geomfromtext(#{startCoord}, 4326))) as path_to_link
+            ,node_id
+            ,st_x(geom) as x
+            ,st_y(geom) as y
        from test.pedestrian_node
        where st_dwithin(geom,
                         st_geometryfromtext(#{startCoord}, 4326),
@@ -133,6 +107,9 @@
        limit 1)
       Union All
       (select st_astext(st_makeline(geom, st_geomfromtext(#{endCoord}, 4326))) as end_to_link
+            ,node_id
+            ,st_x(geom) as x
+            ,st_y(geom) as y
        from test.pedestrian_node
        where st_dwithin(geom,
                         st_geometryfromtext(#{endCoord}, 4326),
@@ -159,22 +136,8 @@
               pedestrian_link_slope_stat plss
               where
                   pl.link_id = plss.link_id'::text,
-                      (select node_id::bigint
-                       from test.pedestrian_node
-                       where st_dwithin(geom,
-                                        st_geometryfromtext(#{startCoord}, 4326),
-                                        30000, false)
-                       ORDER BY ST_Distance(geom,
-                                            st_geometryfromtext(#{startCoord}, 4326))
-                        limit 1),
-                            (select node_id::bigint
-                             from test.pedestrian_node
-                             where st_dwithin(geom,
-                                              st_geometryfromtext(#{endCoord}, 4326),
-                                              30000, false)
-                             ORDER BY ST_Distance(geom,
-                                                  st_geometryfromtext(#{endCoord}, 4326))
-                             limit 1), false) as pgr,
+                      #{paramMap[0].node_id},
+                      #{paramMap[1].node_id}, false) as pgr,
          pedestrian_link pl,
          pedestrian_link_slope_stat plss
     where edge = pl.link_id
@@ -199,22 +162,8 @@
               where
                   pl.link_id = plss.link_id
                   and plss.slope_max < 6  '::text,
-                      (select node_id::bigint
-                       from test.pedestrian_node
-                       where st_dwithin(geom,
-                                        st_geometryfromtext(#{startCoord}, 4326),
-                                        30000, false)
-                       ORDER BY ST_Distance(geom,
-                                            st_geometryfromtext(#{startCoord}, 4326))
-                        limit 1),
-                            (select node_id::bigint
-                             from test.pedestrian_node
-                             where st_dwithin(geom,
-                                              st_geometryfromtext(#{endCoord}, 4326),
-                                              30000, false)
-                             ORDER BY ST_Distance(geom,
-                                                  st_geometryfromtext(#{endCoord}, 4326))
-                             limit 1), false) as pgr,
+                      #{paramMap[0].node_id},
+                      #{paramMap[1].node_id}, false) as pgr,
          pedestrian_link pl,
          pedestrian_link_slope_stat plss
     where edge = pl.link_id

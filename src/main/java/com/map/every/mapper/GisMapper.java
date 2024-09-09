@@ -7,15 +7,15 @@ import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
 public interface GisMapper {
-    HashMap<String, Object> selectShortestPath(Map<String, Object> paramMap);
-    List<HashMap<String, Object>> selectShortestPathLineList(Map<String, Object> paramMap);
+    HashMap<String, Object> selectShortestPath(List<HashMap<String, Object>> paramMap);
+    List<HashMap<String, Object>> selectShortestPathLineList(List<HashMap<String, Object>> paramMap);
     List<HashMap<String, Object>> selectObstaclePOIInRoute(Map<String, Object> paramMap);
     List<HashMap<String, Object>> selectFloatingPopHeatmapPoints(Map<String, Object> paramMap);
     List<HashMap<String, Object>> selectFloatingPopStatInRoute(Map<String, Object> paramMap);
 
     List<HashMap<String, Object>> selectPathToLink(Map<String, Object> paramMap);
 
-    List<HashMap<String, Object>> selectMetPath(Map<String, Object> paramMap);
+    List<HashMap<String, Object>> selectMetPath(List<HashMap<String, Object>> paramMap);
 
-    List<HashMap<String, Object>> selectSafetyPath(Map<String, Object> paramMap);
+    List<HashMap<String, Object>> selectSafetyPath(List<HashMap<String, Object>> paramMap);
 }

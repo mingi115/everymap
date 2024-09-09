@@ -22,12 +22,12 @@ public class GisServiceImpl implements GisService {
     GisMapper gisDAO;
 
     @Override
-    public HashMap<String, Object> getShortestPath(Map<String, Object> paramMap) {
+    public HashMap<String, Object> getShortestPath(List<HashMap<String, Object>> paramMap) {
         return gisDAO.selectShortestPath(paramMap);
     }
 
     @Override
-    public List<HashMap<String, Object>> getShortestPathLineList(Map<String, Object> paramMap) {
+    public List<HashMap<String, Object>> getShortestPathLineList(List<HashMap<String, Object>> paramMap) {
         return gisDAO.selectShortestPathLineList(paramMap);
     }
 
@@ -73,12 +73,12 @@ public class GisServiceImpl implements GisService {
     }
 
     @Override
-    public List<HashMap<String, Object>> getMetPathLineList(Map<String, Object> paramMap) {
+    public List<HashMap<String, Object>> getMetPathLineList(List<HashMap<String, Object>> paramMap) {
         return gisDAO.selectMetPath(paramMap);
     }
 
     @Override
-    public List<HashMap<String, Object>> getSafetyPathLineList(Map<String, Object> paramMap) {
+    public List<HashMap<String, Object>> getSafetyPathLineList(List<HashMap<String, Object>> paramMap) {
         return gisDAO.selectSafetyPath(paramMap);
     }
 }

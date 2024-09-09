@@ -41,11 +41,11 @@ public class ApiController {
 
         List<HashMap<String, Object>> lsList;
         if(method.equals("safety")){
-            lsList = gisService.getSafetyPathLineList(paramMap);
+            lsList = gisService.getSafetyPathLineList(pathToLink);
         }else if(method.equals("met")){
-            lsList = gisService.getMetPathLineList(paramMap);
+            lsList = gisService.getMetPathLineList(pathToLink);
         }else{
-            lsList = gisService.getShortestPathLineList(paramMap);
+            lsList = gisService.getShortestPathLineList(pathToLink);
         }
 
         result.put("lsList", lsList);
