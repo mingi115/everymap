@@ -22,12 +22,12 @@ public class GisServiceImpl implements GisService {
     GisMapper gisDAO;
 
     @Override
-    public HashMap<String, Object> getShortestPath(Map<String, Object> paramMap) {
+    public HashMap<String, Object> getShortestPath(List<HashMap<String, Object>> paramMap) {
         return gisDAO.selectShortestPath(paramMap);
     }
 
     @Override
-    public List<HashMap<String, Object>> getShortestPathLineList(Map<String, Object> paramMap) {
+    public List<HashMap<String, Object>> getShortestPathLineList(List<HashMap<String, Object>> paramMap) {
         return gisDAO.selectShortestPathLineList(paramMap);
     }
 
@@ -65,5 +65,38 @@ public class GisServiceImpl implements GisService {
     @Override
     public List<HashMap<String, Object>> getFloatingPopStatInRoute(Map<String, Object> paramMap) {
         return gisDAO.selectFloatingPopStatInRoute(paramMap);
+    }
+
+    @Override
+    public List<HashMap<String, Object>> getPathToLink(Map<String, Object> paramMap) {
+        return gisDAO.selectPathToLink(paramMap);
+    }
+
+    @Override
+    public List<HashMap<String, Object>> getMetPathLineList(List<HashMap<String, Object>> paramMap) {
+        return gisDAO.selectMetPath(paramMap);
+    }
+
+    @Override
+    public List<HashMap<String, Object>> getSafetyPathLineList(List<HashMap<String, Object>> paramMap) {
+        return gisDAO.selectSafetyPath(paramMap);
+    }
+
+    @Override
+    public List<HashMap<String, Object>> getAstarSafetyPathLineList(
+        List<HashMap<String, Object>> paramMap) {
+        return gisDAO.selectAstarSafetyPath(paramMap);
+    }
+
+    @Override
+    public List<HashMap<String, Object>> getAstarMetPathLineList(
+        List<HashMap<String, Object>> paramMap) {
+        return gisDAO.selectAstarMetPath(paramMap);
+    }
+
+    @Override
+    public List<HashMap<String, Object>> getAstarShortestPathLineList(
+        List<HashMap<String, Object>> paramMap) {
+        return gisDAO.selectAstarShortestPath(paramMap);
     }
 }

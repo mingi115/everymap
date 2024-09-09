@@ -1,11 +1,11 @@
-function fetchShortestPath(startCoord, endCoord){
+function fetchShortestPath(startCoord, endCoord, method){
   const params = new URLSearchParams({
     startCoord : convertCoordinateToWKTFormat(startCoord),
     endCoord : convertCoordinateToWKTFormat(endCoord),
-    weekday : 5,
+    weekday : new Date().getDay(),
     time : new Date().getHours()
   })
-  return fetch(`/api/getShortestPath?${params.toString()}`, {
+  return fetch(`/api/getShortestPath/${method}?${params.toString()}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -34,4 +34,19 @@ function fetchFlowPopStat(route, weekday){
       route
     })
   }).then((response) => response.json())
+}
+
+function fetchAstarShortestPath(startCoord, endCoord, method){
+  const params = new URLSearchParams({
+    startCoord : convertCoordinateToWKTFormat(startCoord),
+    endCoord : convertCoordinateToWKTFormat(endCoord),
+    weekday : new Date().getDay(),
+    time : new Date().getHours()
+  })
+  return fetch(`/api/getAstarShortestPath/${method}?${params.toString()}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }).then((response) => response.json());
 }

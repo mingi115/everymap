@@ -42,6 +42,7 @@ dependencies {
 	//implementation 'org.springframework.ai:spring-ai-openai:1.0.0-SNAPSHOT'
 	implementation 'org.springframework.ai:spring-ai-azure-openai-spring-boot-starter'
 	implementation "me.paulschwarz:spring-dotenv:3.0.0"
+	implementation 'org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4.1:1.16'
 
 	developmentOnly 'org.springframework.boot:spring-boot-devtools:3.3.2'
 	compileOnly 'org.projectlombok:lombok'

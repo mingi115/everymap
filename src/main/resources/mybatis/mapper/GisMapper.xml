@@ -12,22 +12,8 @@
               link_len::double precision as cost
               from
               pedestrian_link'::text,
-                            (select node_id::bigint
-                             from test.pedestrian_node
-                             where st_dwithin(geom,
-                                              st_geometryfromtext(#{startCoord}, 4326),
-                                              30000, false)
-                             ORDER BY ST_Distance(geom,
-                                                  st_geometryfromtext(#{startCoord}, 4326))
-                             limit 1),
-                            (select node_id::bigint
-                             from test.pedestrian_node
-                             where st_dwithin(geom,
-                                              st_geometryfromtext(#{endCoord}, 4326),
-                                              30000, false)
-                             ORDER BY ST_Distance(geom,
-                                                  st_geometryfromtext(#{endCoord}, 4326))
-                             limit 1), false) as pgr,
+                            #{paramMap[0].node_id},
+                            #{paramMap[1].node_id}, false) as pgr,
                pedestrian_link pl
           where edge = pl.link_id) pgr
   </select>
@@ -45,22 +31,8 @@
               link_len::double precision as cost
               from
               pedestrian_link'::text,
-                            (select node_id::bigint
-                             from test.pedestrian_node
-                             where st_dwithin(geom,
-                                              st_geometryfromtext(#{startCoord}, 4326),
-                                              30000, false)
-                             ORDER BY ST_Distance(geom,
-                                                  st_geometryfromtext(#{startCoord}, 4326))
-                             limit 1),
-                            (select node_id::bigint
-                             from test.pedestrian_node
-                             where st_dwithin(geom,
-                                              st_geometryfromtext(#{endCoord}, 4326),
-                                              30000, false)
-                             ORDER BY ST_Distance(geom,
-                                                  st_geometryfromtext(#{endCoord}, 4326))
-                             limit 1), false) as pgr,
+                            #{paramMap[0].node_id},
+                            #{paramMap[1].node_id}, false) as pgr,
                pedestrian_link pl,
                pedestrian_link_slope_stat plss
           where edge = pl.link_id
@@ -87,11 +59,11 @@
     select fp_stat.total_pop, fp_stat.cell_id, st_astext(cell.geometry) as geom
     from floating_population_stat fp_stat,
          (select cell_id, geometry
-          from floating_population_cell fp_cell
+          from test.floating_population_cell fp_cell
           where st_intersects(
                   fp_cell.geometry,
                   st_buffer(
-                    st_geomfromtext(#{route})
+                    st_geomfromtext(#{route}, 4326)
                     ,0.002
                     ,'endcap=square'
                   )
@@ -108,11 +80,11 @@
     from floating_population_stat fp_stat
            right join
          (select cell_id, geometry, timeseries.time
-          from floating_population_cell fp_cell,
+          from test.floating_population_cell fp_cell,
                (select generate_series(0,23) as time) timeseries
           where st_intersects(
                   fp_cell.geometry,
-                  st_geomfromtext(#{route})
+                  st_geomfromtext(#{route}, 4326)
                 )
          ) as cell
          on cell.time=fp_stat.time and fp_stat.cell_id = cell.cell_id
@@ -120,5 +92,169 @@
       weekday = #{weekday}
     group by fp_stat.time
     order by time
+  </select>
+  <select id="selectPathToLink" parameterType="hashMap" resultType="hashMap">
+      (select st_astext(st_makeline(geom, st_geomfromtext(#{startCoord}, 4326))) as path_to_link
+            ,node_id
+            ,st_x(geom) as x
+            ,st_y(geom) as y
+       from test.pedestrian_node
+       where st_dwithin(geom,
+                        st_geometryfromtext(#{startCoord}, 4326),
+                        30000, false)
+       ORDER BY ST_Distance(geom,
+                            st_geometryfromtext(#{startCoord}, 4326))
+       limit 1)
+      Union All
+      (select st_astext(st_makeline(geom, st_geomfromtext(#{endCoord}, 4326))) as end_to_link
+            ,node_id
+            ,st_x(geom) as x
+            ,st_y(geom) as y
+       from test.pedestrian_node
+       where st_dwithin(geom,
+                        st_geometryfromtext(#{endCoord}, 4326),
+                        30000, false)
+       ORDER BY ST_Distance(geom,
+                            st_geometryfromtext(#{endCoord}, 4326))
+       limit 1)
+
+  </select>
+  <select id="selectMetPath" parameterType="hashMap" resultType="hashMap">
+    select pl.link_id,
+           st_astext(pl.geom) as wktgeom,
+           plss.slope_count,
+           plss.slope_median,
+           plss.slope_min,
+           plss.slope_max
+    from pgr_dijkstra('select
+              pl.link_id::bigint as id,
+              from_node_id::bigint as source,
+              to_node_id::bigint as target,
+              (link_len * ((3.5 + (plss.slope_avg * 1.8))/3.5))::double precision as cost
+              from
+              pedestrian_link pl,
+              pedestrian_link_slope_stat plss
+              where
+                  pl.link_id = plss.link_id'::text,
+                      #{paramMap[0].node_id},
+                      #{paramMap[1].node_id}, false) as pgr,
+         pedestrian_link pl,
+         pedestrian_link_slope_stat plss
+    where edge = pl.link_id
+      and plss.link_id = pl.link_id
+  </select>
+  <select id="selectSafetyPath" parameterType="hashMap" resultType="hashMap">
+    <![CDATA[
+    select pl.link_id,
+           st_astext(pl.geom) as wktgeom,
+           plss.slope_count,
+           plss.slope_median,
+           plss.slope_min,
+           plss.slope_max
+    from pgr_dijkstra('select
+              pl.link_id::bigint as id,
+              from_node_id::bigint as source,
+              to_node_id::bigint as target,
+              (link_len * ((3.5 + (plss.slope_avg * 1.8))/3.5))::double precision as cost
+              from
+              pedestrian_link pl,
+              pedestrian_link_slope_stat plss
+              where
+                  pl.link_id = plss.link_id
+                  and plss.slope_max < 6  '::text,
+                      #{paramMap[0].node_id},
+                      #{paramMap[1].node_id}, false) as pgr,
+         pedestrian_link pl,
+         pedestrian_link_slope_stat plss
+    where edge = pl.link_id
+      and plss.link_id = pl.link_id
+    ]]>
+  </select>
+  <select id="selectAstarSafetyPath" parameterType="hashMap" resultType="hashMap">
+    <![CDATA[
+    select pl.link_id,
+           st_astext(pl.geom) as wktgeom,
+           plss.slope_count,
+           plss.slope_median,
+           plss.slope_min,
+           plss.slope_max
+    from pgr_aStar(
+           'select
+               pl.link_id::bigint AS id,
+               from_node_id::bigint AS source,
+               to_node_id::bigint AS target,
+               (link_len * ((3.5 + (plss.slope_avg * 1.8))/3.5))::double precision as cost, '
+             || #{paramMap[0].x} || ' AS x1, '
+             || #{paramMap[0].y} || ' AS y1, '
+             || #{paramMap[1].x} || ' AS x2, '
+             || #{paramMap[1].y} || ' AS y2 '
+             ||'from pedestrian_link pl,
+              pedestrian_link_slope_stat plss
+              where
+                  pl.link_id = plss.link_id
+            and plss.slope_max < 6  '::text,
+           #{paramMap[0].node_id},
+           #{paramMap[1].node_id},
+           false) as pgr,
+         pedestrian_link pl,
+         pedestrian_link_slope_stat plss
+    where edge = pl.link_id
+      and plss.link_id = pl.link_id
+    ]]>
+  </select>
+  <select id="selectAstarMetPath" parameterType="hashMap" resultType="hashMap">
+    select pl.link_id,
+           st_astext(pl.geom) as wktgeom,
+           plss.slope_count,
+           plss.slope_median,
+           plss.slope_min,
+           plss.slope_max
+    from pgr_aStar(
+           'select
+               pl.link_id::bigint AS id,
+               from_node_id::bigint AS source,
+               to_node_id::bigint AS target,
+               (link_len * ((3.5 + (plss.slope_avg * 1.8))/3.5))::double precision as cost, '
+             || #{paramMap[0].x} || ' AS x1, '
+             || #{paramMap[0].y} || ' AS y1, '
+             || #{paramMap[1].x} || ' AS x2, '
+             || #{paramMap[1].y} || ' AS y2 '
+             ||'from pedestrian_link pl,
+              pedestrian_link_slope_stat plss
+              where
+                  pl.link_id = plss.link_id'::text,
+           #{paramMap[0].node_id},
+           #{paramMap[1].node_id},
+           false) as pgr,
+         pedestrian_link pl,
+         pedestrian_link_slope_stat plss
+    where edge = pl.link_id
+      and plss.link_id = pl.link_id;
+  </select>
+  <select id="selectAstarShortestPath" parameterType="hashMap" resultType="hashMap">
+    select pl.link_id,
+           st_astext(pl.geom) as wktgeom,
+           plss.slope_count,
+           plss.slope_median,
+           plss.slope_min,
+           plss.slope_max
+    from pgr_aStar(
+           'select
+               link_id::bigint AS id,
+               from_node_id::bigint AS source,
+               to_node_id::bigint AS target,
+               link_len::double precision AS cost, '
+             || #{paramMap[0].x} || ' AS x1, '
+             || #{paramMap[0].y} || ' AS y1, '
+             || #{paramMap[1].x} || ' AS x2, '
+             || #{paramMap[1].y} || ' AS y2 '
+             ||'from pedestrian_link'::text,
+           #{paramMap[0].node_id},
+           #{paramMap[1].node_id},
+           false) as pgr,
+         pedestrian_link pl,
+         pedestrian_link_slope_stat plss
+    where edge = pl.link_id
+      and plss.link_id = pl.link_id;
   </select>
 </mapper>

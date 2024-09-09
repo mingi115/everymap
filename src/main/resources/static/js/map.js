@@ -1,4 +1,9 @@
-let routeInfo ={};
+let routeInfo;
+let safetyRouteInfo;
+let metRouteInfo;
+let astarRouteInfo;
+let astarSafetyRouteInfo;
+let astarMetRouteInfo;
 const wktFormatter = new ol.format.WKT();
 const baseLayer = new ol.layer.Tile({ //타일 생성
   title : 'Vworld Map', //이름
@@ -63,45 +68,296 @@ const map = new ol.Map({
   target: 'map',
 });
 
+const rClickOverlay = new ol.Overlay({
+  positioning: 'top-left',
+  stopEvent: true
+});
+function makeRClickOverlayDom(){
+  const overlayContainer = document.createElement('div');
+  overlayContainer.className = 'ol-overlay-container';
+  overlayContainer.style.background = 'white';
+  const startMarker = document.createElement('div');
+  startMarker.innerHTML = '<svg  fill="#44c565" width="15px" height="15px" viewBox="0 0 15 15" version="1.1" id="marker" xmlns="http://www.w3.org/2000/svg">\n'
+      + '  <path d="M7.5,0C5.0676,0,2.2297,1.4865,2.2297,5.2703&#xA;&#x9;C2.2297,7.8378,6.2838,13.5135,7.5,15c1.0811-1.4865,5.2703-7.027,5.2703-9.7297C12.7703,1.4865,9.9324,0,7.5,0z"/>\n'
+      + '</svg>'
+  const startDiv = document.createElement('div');
+  startDiv.appendChild(startMarker);
+  startDiv.id = 'overlay-start-btn';
+  startDiv.style.border = '1px solid black';
+  startDiv.style.cursor = 'pointer';
+  startDiv.style.display = 'flex';
+  startDiv.innerHTML += '출발';
+  const endMarker = document.createElement('div');
+  endMarker.innerHTML = '<svg  fill="#e53d5d" width="15px" height="15px" viewBox="0 0 15 15" version="1.1" id="marker" xmlns="http://www.w3.org/2000/svg">\n'
+      + '  <path d="M7.5,0C5.0676,0,2.2297,1.4865,2.2297,5.2703&#xA;&#x9;C2.2297,7.8378,6.2838,13.5135,7.5,15c1.0811-1.4865,5.2703-7.027,5.2703-9.7297C12.7703,1.4865,9.9324,0,7.5,0z"/>\n'
+      + '</svg>'
+  const endDiv = document.createElement('div');
+  endDiv.id = 'overlay-end-btn';
+  endDiv.appendChild(endMarker);
+  endDiv.style.border = '1px solid black';
+  endDiv.style.display = 'flex';
+  endDiv.style.cursor = 'pointer';
+  endDiv.innerHTML += '도착';
+  overlayContainer.appendChild(startDiv);
+  overlayContainer.appendChild(endDiv);
+
+  return overlayContainer;
+}
+map.on('contextmenu', function(e){
+  e.preventDefault();
+  map.removeOverlay(rClickOverlay);
+  rClickOverlay.setElement(makeRClickOverlayDom());
+  const coordinate = e.coordinate;
+  rClickOverlay.setPosition(coordinate);
+  map.addOverlay(rClickOverlay);
+  const startBtn = document.getElementById('overlay-start-btn');
+  startBtn.addEventListener('click', ()=>addStartEndPoint(coordinate, true));
+  const endBtn  = document.getElementById('overlay-end-btn');
+  endBtn.addEventListener('click', ()=>addStartEndPoint(coordinate, false));
+})
 function clearWindow(){
   vectorSource.clear();
   heamapSource.clear();
-  routeInfo={};
+  routeInfo=null;
+  safetyRouteInfo=null;
+  metRouteInfo=null;
   if(popChart){
     popChart.destroy();
   }
 }
 
-let pointArr =[];
-async function addPointOnMap(e){
-  if(pointArr.length === 0){
-    clearWindow();
+document.getElementById('find-route').addEventListener('click', async ()=>{
+  document.getElementById('shortest-path-btn').click();
+});
+document.getElementById('shortest-path-btn').addEventListener('click', async (e)=>{
+  await getRouteInfo('shortest');
+  if(routeInfo){
+    routeSelectEvt(e);
   }
-  pointArr.push(e.coordinate);
-  addStartEndPoint(e.coordinate);
+});
+document.getElementById('safety-path-btn').addEventListener('click', async (e)=>{
+  await getRouteInfo('safety');
+  if(safetyRouteInfo){
+    routeSelectEvt(e);
+  }
+});
+document.getElementById('met-path-btn').addEventListener('click', async (e)=>{
+  await getRouteInfo('met');
+  if(metRouteInfo){
+    routeSelectEvt(e);
+  }
+});
 
-  if(pointArr.length >= 2){
-    showLodingImg();
-    routeInfo= await fetchShortestPath(pointArr[0], pointArr[pointArr.length-1])
-    hideLodingImg();
-    pointArr=[];
-    addRouteOnMap(routeInfo.lsList);
-    addObstaclePOIOnMap(routeInfo.obstaclePoiList);
-    addHeatmapPoint(routeInfo.heatmapPointList);
-    addPathSummerization();
-    addActiveClassOnBtnUsingWeekDay(new Date().getDay());
-    await showFlowPopChart(routeInfo.route, new Date().getDay());
+document.getElementById('astar-shortest-path-btn').addEventListener('click', async (e)=>{
+  await getAstarRouteInfo('astar-shortest');
+  if(astarRouteInfo){
+    routeSelectEvt(e);
   }
+});
+document.getElementById('astar-safety-path-btn').addEventListener('click', async (e)=>{
+  await getAstarRouteInfo('astar-safety');
+  if(astarSafetyRouteInfo){
+    routeSelectEvt(e);
+  }
+});
+document.getElementById('astar-met-path-btn').addEventListener('click', async (e)=>{
+  await getAstarRouteInfo('astar-met');
+  if(astarMetRouteInfo){
+    routeSelectEvt(e);
+  }
+});
+
+function routeSelectEvt(e){
+  document.querySelectorAll('.accordion-button').forEach(item =>{
+    item.classList.add('collapsed');
+  })
+  document.querySelectorAll('.accordion-collapse').forEach(item =>{
+    item.classList.add('collapse');
+  })
+  e.target.classList.remove('collapsed');
+  e.target.parentNode.parentNode.lastElementChild.classList.remove('collapse');
+}
+async function getRouteInfo(method){
+  if(!startPoint || !endPoint)  {
+    alert('출발지와 도착지를 선택해 주세요.');
+    return;
+  }
+
+  const startCoord = startPoint.getGeometry().getCoordinates();
+  const endCoord = endPoint.getGeometry().getCoordinates();
+
+  showLodingImg();
+  if(method==='shortest'){
+    routeInfo= routeInfo ? routeInfo : await fetchShortestPath(startCoord, endCoord, method)
+    await fillRouteInfoUI(routeInfo);
+  }else if (method==='safety'){
+    safetyRouteInfo= safetyRouteInfo ? safetyRouteInfo : await fetchShortestPath(startCoord, endCoord, method)
+    await fillRouteInfoUI(safetyRouteInfo);
+  }else if(method === 'met'){
+    metRouteInfo= metRouteInfo ? metRouteInfo : await fetchShortestPath(startCoord, endCoord, method)
+    await fillRouteInfoUI(metRouteInfo);
+  }
+  addPathSummerization(method);
+  hideLodingImg();
 }
 
-function addPathSummerization(){
+async function getAstarRouteInfo(method){
+  if(!startPoint || !endPoint)  {
+    alert('출발지와 도착지를 선택해 주세요.');
+    return;
+  }
+
+  const startCoord = startPoint.getGeometry().getCoordinates();
+  const endCoord = endPoint.getGeometry().getCoordinates();
+
+  showLodingImg();
+  if(method==='astar-shortest'){
+    astarRouteInfo= astarRouteInfo ? astarRouteInfo : await fetchAstarShortestPath(startCoord, endCoord, method)
+    await fillRouteInfoUI(astarRouteInfo);
+  }else if (method==='astar-safety'){
+    astarSafetyRouteInfo= astarSafetyRouteInfo ? astarSafetyRouteInfo : await fetchAstarShortestPath(startCoord, endCoord, method)
+    await fillRouteInfoUI(astarSafetyRouteInfo);
+  }else if(method === 'astar-met'){
+    astarMetRouteInfo= astarMetRouteInfo ? astarMetRouteInfo : await fetchAstarShortestPath(startCoord, endCoord, method)
+    await fillRouteInfoUI(astarMetRouteInfo);
+  }
+  addPathSummerization(method)
+  hideLodingImg();
+}
+
+async function fillRouteInfoUI(info){
+  addRouteOnMap(info.lsList);
+  addLinkToPath(info.pathToLink);
+  addObstaclePOIOnMap(info.obstaclePoiList);
+  addHeatmapPoint(info.heatmapPointList);
+
+  addActiveClassOnBtnUsingWeekDay(new Date().getDay());
+  await showFlowPopChart(info.route, new Date().getDay());
+}
+
+
+function addLinkToPath(pathToLink){
+  pathToLink.forEach((item, i)=>{
+    const routeGeom = wktFormatter.readFeature(item.path_to_link).getGeometry();
+    const feature = new ol.Feature({
+      geometry: routeGeom
+    });
+    feature.setStyle(
+        new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            lineDash : [0,0,0,10],
+            color: '#7e7e7e',
+            width: 5,
+          })
+        })
+    );
+    vectorSource.addFeature(feature);
+  })
+}
+
+function addPathSummerization(method){
   addLoadingChatCard();
-  fetchAiPathSummarization(makePromptParam()).then(result=>{
+  let info;
+  if(method === 'shortest'){
+    info = routeInfo;
+  }else if(method === 'safety'){
+    info = safetyRouteInfo;
+  }else if(method === 'met'){
+    info = metRouteInfo;
+  }else if(method === 'astar-shortest'){
+    info = astarRouteInfo;
+  }else if(method === 'astar-safety'){
+    info = astarSafetyRouteInfo;
+  }else if(method === 'astar-met'){
+    info = astarMetRouteInfo;
+  }
+
+  const promptParam = makePromptParam(info);
+  fetchAiPathSummarization(promptParam).then(result=>{
     deleteLoadingChatCard();
     addNewChatCard(result.pathInfo);
   });
+
+  parsingPromptParam(method, promptParam);
 }
 
+function parsingPromptParam(method, param){
+  const targetInfoContent =document.getElementById(`${method}-info-content`);
+  const fp = param.floating_population;
+
+  targetInfoContent.innerHTML='<div class="container"><ul class="list-group">';
+  if(fp.quite != null || fp.crowded !=null || fp.current !=null){
+    targetInfoContent.innerHTML += '유동인구 :<br>'
+  }
+  if(fp.quite != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최소 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.quite}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(fp.crowded != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최대 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.crowded}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(fp.current != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;평균 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.current}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(fp.quite != null || fp.crowded !=null || fp.current !=null){
+    targetInfoContent.innerHTML += '<br>'
+  }
+  const slp = param.slope;
+  if(slp.min != null || slp.max !=null || slp.avg !=null){
+    targetInfoContent.innerHTML += '경사도 :<br>'
+  }
+  if(slp.min != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최소 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.min}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(slp.max != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최대 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.max}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(slp.avg != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;평균 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.avg}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(slp.min != null || slp.max !=null || slp.avg !=null){
+    targetInfoContent.innerHTML += '<br>'
+  }
+  const ostc = param.obstacles;
+  if(ostc['맨홀'] != null || ostc['과속방지턱'] !=null || ostc['빗물받이'] !=null){
+    targetInfoContent.innerHTML += '위험요소 :<br>'
+  }
+  if(ostc['맨홀'] != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;맨홀 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['맨홀']}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(ostc['과속방지턱'] != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;과속방지턱 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['과속방지턱']}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+  if(ostc['빗물받이'] != null){
+    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;빗물받이 : </span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['빗물받이']}</span>`;
+    targetInfoContent.innerHTML += `</li>`;
+  }
+}
 async function showFlowPopChart(route, weekday){
   if(!route) return;
   if(popChart){
@@ -112,6 +368,7 @@ async function showFlowPopChart(route, weekday){
 }
 
 function addHeatmapPoint(heatmapPointList){
+  heamapSource.clear();
   for(const poi of heatmapPointList) {
     const pointFeature = new ol.Feature({
       geometry: wktFormatter.readFeature(poi.geom).getGeometry(),
@@ -126,6 +383,7 @@ const overlayDom = document.createElement("div");
 overlayDom.className = "overlay";
 let overlay;
 function mapClickEvt(e){
+  map.removeOverlay(rClickOverlay);
   if(overlay){
     map.removeOverlay(overlay);
     overlay=null;
@@ -148,14 +406,18 @@ function mapClickEvt(e){
 
       overlay.setPosition(feature.getGeometry().getCoordinates());
       map.addOverlay(overlay);
-    }else{
-      addPointOnMap(e);
     }
   })
 }
 
 
 function addRouteOnMap(lsList){
+  const features = vectorSource.getFeatures();
+  features.forEach(feat =>{
+    if(feat.getGeometry().getType() === 'LineString'){
+      vectorSource.removeFeature(feat);
+    }
+  })
   lsList.forEach((item, i)=>{
     const routeGeom = wktFormatter.readFeature(item.wktgeom).getGeometry();
     const feature = new ol.Feature({
@@ -165,23 +427,43 @@ function addRouteOnMap(lsList){
     if(item.slope_max > 6){
       color = '#Ff0000';
     }else if (item.slope_max > 3){
-      color = '#ff8400';
+      color = '#ffa600';
     }else{
       color = '#55ff00';
     }
     feature.setStyle(
-        new ol.style.Style({
-          stroke: new ol.style.Stroke({
-            color: color,
-            width: 5,
-          })
-        })
+        [
+          new ol.style.Style({
+            stroke: new ol.style.Stroke({
+              color: '#000',
+              width: 6,
+            })
+          }),
+          new ol.style.Style({
+            stroke: new ol.style.Stroke({
+              color: color,
+              width: 5,
+            })
+          }),
+        ]
     );
     vectorSource.addFeature(feature);
   })
 }
 
-function addStartEndPoint(coord){
+let startPoint;
+let endPoint;
+function addStartEndPoint(coord, isStart){
+  if(routeInfo) clearWindow();
+  map.removeOverlay(rClickOverlay);
+  if(isStart){
+    vectorSource.removeFeature(startPoint);
+
+    startPoint=null;
+  }else{
+    vectorSource.removeFeature(endPoint);
+    endPoint=null;
+  }
   const pointFeature = new ol.Feature({
     geometry: new ol.geom.Point(coord),
   });
@@ -189,14 +471,14 @@ function addStartEndPoint(coord){
       [
         new ol.style.Style({
           image: new ol.style.Icon({
-            color: pointArr.length === 1 ? '#44c565' : '#e53d5d',
+            color: isStart ? '#44c565' : '#e53d5d',
             anchor: [0.5, 40],
             anchorXUnits: 'fraction',
             anchorYUnits: 'pixels',
             src: '/image/marker.svg',
           }),
           text: new ol.style.Text({
-            text: pointArr.length === 1 ? '출발' : '도착',
+            text: isStart ? '출발' : '도착',
             offsetY: -25,
             fill: new ol.style.Fill({
               color: '#FFF',
@@ -206,6 +488,14 @@ function addStartEndPoint(coord){
       ]
   );
   vectorSource.addFeature(pointFeature);
+
+  if(isStart){
+    startInput.value = coord.toString();
+    startPoint=pointFeature;
+  }else{
+    endInput.value = coord.toString();
+    endPoint=pointFeature;
+  }
 }
 
 function addObstaclePOIOnMap(obstaclePoiList){
@@ -271,6 +561,9 @@ function addActiveClassOnBtnUsingWeekDay(weekday){
 const chartDiv = document.getElementById("chart");
 let popChart;
 function makeFlowPopChart(floatingPopStat){
+  if(popChart){
+    popChart.destroy();
+  }
   const dataSeries = floatingPopStat.map(item => item.avg);
   const peakIndex = dataSeries.indexOf(Math.max(...dataSeries));
 
@@ -321,18 +614,18 @@ function makeFlowPopChart(floatingPopStat){
     }
   });
 }
-function makePromptParam(){
-  const heatmapPointList = routeInfo.heatmapPointList;
+function makePromptParam(info){
+  const heatmapPointList = info.heatmapPointList;
   const popValues = heatmapPointList.map(item => item.total_pop);
-  const current = popValues.reduce((a, b) => a + b, 0) / popValues.length;
-  const quite = Math.min(...popValues);
-  const crowded = Math.max(...popValues);
+  const current = (popValues.reduce((a, b) => a + b, 0) / popValues.length).toFixed(1);
+  const quite = Math.min(...popValues).toFixed(1);
+  const crowded = Math.max(...popValues).toFixed(1);
   const floating_population ={
     current, quite, crowded
   }
 
   //slope 정보
-  const lsList = routeInfo.lsList;
+  const lsList = info.lsList;
   const slopeMinValues = lsList.map(item => item.slope_min);
   const slopeMedianValues = lsList.map(item => item.slope_median);
   const slopeMaxValues = lsList.map(item => item.slope_max);
@@ -342,12 +635,12 @@ function makePromptParam(){
   const slope ={
     'min':minSlopeMin,
     'max':maxSlopeMax,
-    'avg': avgSlopeMedian,
+    'avg': avgSlopeMedian.toFixed(1),
     'safety_min': '4',
     'safety_max': '6'
   }
 
-  const obstaclePoiList = routeInfo.obstaclePoiList;
+  const obstaclePoiList = info.obstaclePoiList;
   const obstacles = obstaclePoiList.reduce((acc, item) => {
     acc[item.category] = (acc[item.category] || 0) + 1;
     return acc;
@@ -395,7 +688,7 @@ function showRoadview(e){
 function closeRoadviewMode(){
   isRoadviewMode = false;
   roadviewModal.style.zIndex = '2';
-  map.on('click', addPointOnMap);
+
   roadviewSource.clear();
   map.removeLayer(roadviewLayer);
 }
@@ -423,3 +716,42 @@ closeRoadviewBtn.addEventListener('click', function(){
 const roadview = new kakao.maps.Roadview(roadviewTarget);
 const roadviewClient = new kakao.maps.RoadviewClient();
 //roadview 끝
+
+const startInput = document.getElementById('start_input');
+startInput.addEventListener('click', (e) => {findAddress(e)});
+const endInput = document.getElementById('end_input');
+endInput.addEventListener('click', (e) => {findAddress(e)});
+
+function findAddress(e){
+  new daum.Postcode({
+    oncomplete: function(data) {
+
+      const myHeaders = new Headers();
+      myHeaders.append("Authorization", "KakaoAK 3c7304bbefd85b605b36ae4dfb2594c4");
+
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        redirect: "follow"
+      };
+
+      fetch(`https://dapi.kakao.com/v2/local/search/address.json?query=${data.address}`, requestOptions)
+      .then((response) => response.json())
+      .then((result) => result.documents[0].road_address)
+      .then((result) => {
+        const id = e.target.id
+        if(id === 'start_input'){
+          addStartEndPoint([result.x, result.y ], true);
+        }else{
+          addStartEndPoint([result.x, result.y ], false);
+        }
+        map.getView().setCenter([result.x, result.y ]);
+        e.target.value = result.region_3depth_name ? result.region_3depth_name+ " " :'';
+        e.target.value += result.building_name ? result.building_name+ " ":'';
+        e.target.value += result.main_building_no ? result.main_building_no : '';
+      })
+      .catch((error) => console.error(error));
+    }
+  }).open();
+
+}

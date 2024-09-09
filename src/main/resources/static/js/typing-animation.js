@@ -1,4 +1,4 @@
-function animateTyping(messageElementId, message = '', typeSpeed = 10){
+function animateTyping(messageElementId, message = '', typeSpeed = 20){
   if (document.querySelector(messageElementId) === null) {
     console.error('messageElementId not found');
   }
@@ -81,5 +81,5 @@ let chatCardId=0;
 function addNewChatCard(cardText){
   chatCardId++;
   createNewChatCard(`chat-${chatCardId}`);
-  animateTyping(`#chat-${chatCardId}`, cardText, 30);
+  animateTyping(`#chat-${chatCardId}`, cardText, 20);
 }
