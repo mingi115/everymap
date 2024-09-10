@@ -52,7 +52,10 @@ public class ApiController {
 
         String route = gisService.mergeLinestringList(lsList);
         paramMap.put("route", route);
+
         result.put("route", route);
+        Double lengthSum = gisService.sumLinkLength(lsList);
+        result.put("lengthSum", lengthSum);
 
         List<HashMap<String, Object>> op = gisService.getObstaclePOIInRoute(paramMap);
         result.put("obstaclePoiList", op);
@@ -128,6 +131,8 @@ public class ApiController {
 
         result.put("lsList", lsList);
         String route = gisService.mergeLinestringList(lsList);
+        Double lengthSum = gisService.sumLinkLength(lsList);
+        result.put("lengthSum", lengthSum);
         paramMap.put("route", route);
         result.put("route", route);
         List<HashMap<String, Object>> op = gisService.getObstaclePOIInRoute(paramMap);
