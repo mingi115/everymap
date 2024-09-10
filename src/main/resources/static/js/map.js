@@ -286,7 +286,6 @@ function addPathSummerization(method){
   if(info.route !== ''){
     addLoadingChatCard();
     promptParam = makePromptParam(info);
-    console.log(promptParam);
     fetchAiPathSummarization(promptParam).then(result=>{
       deleteLoadingChatCard();
       addNewChatCard(result.pathInfo);
@@ -301,6 +300,12 @@ function parsingPromptParam(method, param){
 
   targetInfoContent.innerHTML='<div class="container"><ul class="list-group">';
   if(param) {
+    if(param.distance_meter){
+      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+      targetInfoContent.innerHTML += `<span>거리 : </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${param.distance_meter}m</span>`;
+      targetInfoContent.innerHTML += `</li><br>`;
+    }
 
     const fp = param.floating_population;
     if (fp.quite != null || fp.crowded != null || fp.current != null) {
@@ -640,6 +645,9 @@ function makeFlowPopChart(floatingPopStat){
   });
 }
 function makePromptParam(info){
+
+  const distance_meter = info?.lengthSum.toFixed(1);;
+
   const heatmapPointList = info.heatmapPointList;
   const popValues = heatmapPointList?.map(item => item.total_pop);
   let floating_population;
@@ -654,7 +662,6 @@ function makePromptParam(info){
 
   //slope 정보
   const lsList = info?.lsList;
-  console.log('lsList', lsList);
   let slope;
   if(lsList){
     const slopeMinValues = lsList.map(item => item.slope_min);
@@ -683,7 +690,7 @@ function makePromptParam(info){
   }
 
   return {
-    floating_population, slope, obstacles
+    distance_meter, floating_population, slope, obstacles
   };
 }
 

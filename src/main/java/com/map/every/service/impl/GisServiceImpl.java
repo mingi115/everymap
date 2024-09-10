@@ -62,6 +62,19 @@ public class GisServiceImpl implements GisService {
     }
 
     @Override
+    public Double sumLinkLength(List<HashMap<String, Object>> linestringList) {
+        if(!linestringList.isEmpty()){
+            double result = 0.0;
+            for(HashMap<String, Object> ls: linestringList){
+                result+=(double) ls.get("link_len");
+            }
+            return result;
+        }else{
+            return null;
+        }
+    }
+
+    @Override
     public List<HashMap<String, Object>> getFloatingPopHeatmapPoints(Map<String, Object> paramMap) {
         if(paramMap.get("route") != null && !paramMap.get("route").equals("")) {
             return gisDAO.selectFloatingPopHeatmapPoints(paramMap);

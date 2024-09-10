@@ -20,6 +20,7 @@
   <select id="selectShortestPathLineList" parameterType="hashMap" resultType="hashMap">
     select pl.link_id,
            st_astext(pl.geom) as wktgeom,
+           pl.link_len::double precision,
            plss.slope_count,
            plss.slope_median,
            plss.slope_min,
@@ -122,6 +123,7 @@
   <select id="selectMetPath" parameterType="hashMap" resultType="hashMap">
     select pl.link_id,
            st_astext(pl.geom) as wktgeom,
+           pl.link_len::double precision,
            plss.slope_count,
            plss.slope_median,
            plss.slope_min,
@@ -147,6 +149,7 @@
     <![CDATA[
     select pl.link_id,
            st_astext(pl.geom) as wktgeom,
+           pl.link_len::double precision,
            plss.slope_count,
            plss.slope_median,
            plss.slope_min,
@@ -174,6 +177,7 @@
     <![CDATA[
     select pl.link_id,
            st_astext(pl.geom) as wktgeom,
+           pl.link_len::double precision,
            plss.slope_count,
            plss.slope_median,
            plss.slope_min,
@@ -205,6 +209,7 @@
   <select id="selectAstarMetPath" parameterType="hashMap" resultType="hashMap">
     select pl.link_id,
            st_astext(pl.geom) as wktgeom,
+           pl.link_len::double precision,
            plss.slope_count,
            plss.slope_median,
            plss.slope_min,
@@ -234,6 +239,7 @@
   <select id="selectAstarShortestPath" parameterType="hashMap" resultType="hashMap">
     select pl.link_id,
            st_astext(pl.geom) as wktgeom,
+           pl.link_len::double precision,
            plss.slope_count,
            plss.slope_median,
            plss.slope_min,

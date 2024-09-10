@@ -10,6 +10,7 @@ public interface GisService {
     List<HashMap<String, Object>> getShortestPathLineList(List<HashMap<String, Object>> paramMap);
     List<HashMap<String, Object>> getObstaclePOIInRoute(Map<String, Object> paramMap);
     String mergeLinestringList(List<HashMap<String, Object>> linestringList) throws ParseException;
+    Double sumLinkLength(List<HashMap<String, Object>> linestringList);
     List<HashMap<String, Object>> getFloatingPopHeatmapPoints(Map<String, Object> paramMap);
     List<HashMap<String, Object>> getFloatingPopStatInRoute(Map<String, Object> paramMap);
     List<HashMap<String, Object>> getPathToLink(Map<String, Object> paramMap);
