@@ -118,9 +118,15 @@ map.on('contextmenu', function(e){
 function clearWindow(){
   vectorSource.clear();
   heamapSource.clear();
+  startInput.value='';
+  endInput.value='';
+  collapseRouteInfo()
   routeInfo=null;
   safetyRouteInfo=null;
   metRouteInfo=null;
+  astarMetRouteInfo=null;
+  astarRouteInfo=null;
+  astarSafetyRouteInfo=null;
   if(popChart){
     popChart.destroy();
   }
@@ -167,13 +173,17 @@ document.getElementById('astar-met-path-btn').addEventListener('click', async (e
   }
 });
 
-function routeSelectEvt(e){
+
+function collapseRouteInfo(){
   document.querySelectorAll('.accordion-button').forEach(item =>{
     item.classList.add('collapsed');
   })
   document.querySelectorAll('.accordion-collapse').forEach(item =>{
     item.classList.add('collapse');
   })
+}
+function routeSelectEvt(e){
+  collapseRouteInfo();
   e.target.classList.remove('collapsed');
   e.target.parentNode.parentNode.lastElementChild.classList.remove('collapse');
 }
@@ -256,7 +266,7 @@ function addLinkToPath(pathToLink){
 }
 
 function addPathSummerization(method){
-  addLoadingChatCard();
+
   let info;
   if(method === 'shortest'){
     info = routeInfo;
@@ -272,91 +282,104 @@ function addPathSummerization(method){
     info = astarMetRouteInfo;
   }
 
-  const promptParam = makePromptParam(info);
-  fetchAiPathSummarization(promptParam).then(result=>{
-    deleteLoadingChatCard();
-    addNewChatCard(result.pathInfo);
-  });
-
+  let promptParam;
+  if(info.route !== ''){
+    addLoadingChatCard();
+    promptParam = makePromptParam(info);
+    console.log(promptParam);
+    fetchAiPathSummarization(promptParam).then(result=>{
+      deleteLoadingChatCard();
+      addNewChatCard(result.pathInfo);
+    });
+  }
   parsingPromptParam(method, promptParam);
 }
 
 function parsingPromptParam(method, param){
   const targetInfoContent =document.getElementById(`${method}-info-content`);
-  const fp = param.floating_population;
+
 
   targetInfoContent.innerHTML='<div class="container"><ul class="list-group">';
-  if(fp.quite != null || fp.crowded !=null || fp.current !=null){
-    targetInfoContent.innerHTML += '유동인구 :<br>'
-  }
-  if(fp.quite != null){
+  if(param) {
+
+    const fp = param.floating_population;
+    if (fp.quite != null || fp.crowded != null || fp.current != null) {
+      targetInfoContent.innerHTML += '유동인구 :<br>'
+    }
+    if (fp.quite != null) {
+      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최소 : </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.quite}</span>`;
+      targetInfoContent.innerHTML += `</li>`;
+    }
+    if (fp.crowded != null) {
+      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최대 : </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.crowded}</span>`;
+      targetInfoContent.innerHTML += `</li>`;
+    }
+    if (fp.current != null) {
+      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;평균 : </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.current}</span>`;
+      targetInfoContent.innerHTML += `</li>`;
+    }
+    if (fp.quite != null || fp.crowded != null || fp.current != null) {
+      targetInfoContent.innerHTML += '<br>'
+    }
+    const slp = param.slope;
+    if (slp.min != null || slp.max != null || slp.avg != null) {
+      targetInfoContent.innerHTML += '경사도 :<br>'
+    }
+    if (slp.min != null) {
+      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최소 : </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.min}</span>`;
+      targetInfoContent.innerHTML += `</li>`;
+    }
+    if (slp.max != null) {
+      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최대 : </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.max}</span>`;
+      targetInfoContent.innerHTML += `</li>`;
+    }
+    if (slp.avg != null) {
+      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;평균 : </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.avg}</span>`;
+      targetInfoContent.innerHTML += `</li>`;
+    }
+    if (slp.min != null || slp.max != null || slp.avg != null) {
+      targetInfoContent.innerHTML += '<br>'
+    }
+    const ostc = param.obstacles;
+    if (ostc['맨홀'] != null || ostc['과속방지턱'] != null || ostc['빗물받이'] != null) {
+      targetInfoContent.innerHTML += '위험요소 :<br>'
+    }
+    if (ostc['맨홀'] != null) {
+      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;맨홀 : </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['맨홀']}</span>`;
+      targetInfoContent.innerHTML += `</li>`;
+    }
+    if (ostc['과속방지턱'] != null) {
+      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;과속방지턱 : </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['과속방지턱']}</span>`;
+      targetInfoContent.innerHTML += `</li>`;
+    }
+    if (ostc['빗물받이'] != null) {
+      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;빗물받이 : </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['빗물받이']}</span>`;
+      targetInfoContent.innerHTML += `</li>`;
+    }
+  }else{
     targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최소 : </span>`;
-    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.quite}</span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-danger rounded-pill">검색 결과가 없습니다.</span>`;
     targetInfoContent.innerHTML += `</li>`;
   }
-  if(fp.crowded != null){
-    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최대 : </span>`;
-    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.crowded}</span>`;
-    targetInfoContent.innerHTML += `</li>`;
-  }
-  if(fp.current != null){
-    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;평균 : </span>`;
-    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.current}</span>`;
-    targetInfoContent.innerHTML += `</li>`;
-  }
-  if(fp.quite != null || fp.crowded !=null || fp.current !=null){
-    targetInfoContent.innerHTML += '<br>'
-  }
-  const slp = param.slope;
-  if(slp.min != null || slp.max !=null || slp.avg !=null){
-    targetInfoContent.innerHTML += '경사도 :<br>'
-  }
-  if(slp.min != null){
-    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최소 : </span>`;
-    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.min}</span>`;
-    targetInfoContent.innerHTML += `</li>`;
-  }
-  if(slp.max != null){
-    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최대 : </span>`;
-    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.max}</span>`;
-    targetInfoContent.innerHTML += `</li>`;
-  }
-  if(slp.avg != null){
-    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;평균 : </span>`;
-    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.avg}</span>`;
-    targetInfoContent.innerHTML += `</li>`;
-  }
-  if(slp.min != null || slp.max !=null || slp.avg !=null){
-    targetInfoContent.innerHTML += '<br>'
-  }
-  const ostc = param.obstacles;
-  if(ostc['맨홀'] != null || ostc['과속방지턱'] !=null || ostc['빗물받이'] !=null){
-    targetInfoContent.innerHTML += '위험요소 :<br>'
-  }
-  if(ostc['맨홀'] != null){
-    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;맨홀 : </span>`;
-    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['맨홀']}</span>`;
-    targetInfoContent.innerHTML += `</li>`;
-  }
-  if(ostc['과속방지턱'] != null){
-    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;과속방지턱 : </span>`;
-    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['과속방지턱']}</span>`;
-    targetInfoContent.innerHTML += `</li>`;
-  }
-  if(ostc['빗물받이'] != null){
-    targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-    targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;빗물받이 : </span>`;
-    targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['빗물받이']}</span>`;
-    targetInfoContent.innerHTML += `</li>`;
-  }
+  targetInfoContent.innerHTML += '</ul></div>';
 }
 async function showFlowPopChart(route, weekday){
   if(!route) return;
@@ -369,6 +392,7 @@ async function showFlowPopChart(route, weekday){
 
 function addHeatmapPoint(heatmapPointList){
   heamapSource.clear();
+  if(!heatmapPointList) return;
   for(const poi of heatmapPointList) {
     const pointFeature = new ol.Feature({
       geometry: wktFormatter.readFeature(poi.geom).getGeometry(),
@@ -499,6 +523,7 @@ function addStartEndPoint(coord, isStart){
 }
 
 function addObstaclePOIOnMap(obstaclePoiList){
+  if(!obstaclePoiList) return;
   for(const poi of obstaclePoiList) {
     const pointFeature = new ol.Feature({
       geometry: wktFormatter.readFeature(poi.geom).getGeometry(),
@@ -616,35 +641,46 @@ function makeFlowPopChart(floatingPopStat){
 }
 function makePromptParam(info){
   const heatmapPointList = info.heatmapPointList;
-  const popValues = heatmapPointList.map(item => item.total_pop);
-  const current = (popValues.reduce((a, b) => a + b, 0) / popValues.length).toFixed(1);
-  const quite = Math.min(...popValues).toFixed(1);
-  const crowded = Math.max(...popValues).toFixed(1);
-  const floating_population ={
-    current, quite, crowded
+  const popValues = heatmapPointList?.map(item => item.total_pop);
+  let floating_population;
+  if(popValues){
+    const current = (popValues.reduce((a, b) => a + b, 0) / popValues.length).toFixed(1);
+    const quite = Math.min(...popValues).toFixed(1);
+    const crowded = Math.max(...popValues).toFixed(1);
+    floating_population ={
+      current, quite, crowded
+    }
   }
 
   //slope 정보
-  const lsList = info.lsList;
-  const slopeMinValues = lsList.map(item => item.slope_min);
-  const slopeMedianValues = lsList.map(item => item.slope_median);
-  const slopeMaxValues = lsList.map(item => item.slope_max);
-  const avgSlopeMedian = slopeMedianValues.reduce((a, b) => a + b, 0) / slopeMedianValues.length;
-  const minSlopeMin = Math.min(...slopeMinValues);
-  const maxSlopeMax = Math.max(...slopeMaxValues);
-  const slope ={
-    'min':minSlopeMin,
-    'max':maxSlopeMax,
-    'avg': avgSlopeMedian.toFixed(1),
-    'safety_min': '4',
-    'safety_max': '6'
+  const lsList = info?.lsList;
+  console.log('lsList', lsList);
+  let slope;
+  if(lsList){
+    const slopeMinValues = lsList.map(item => item.slope_min);
+    const slopeMedianValues = lsList.map(item => item.slope_median);
+    const slopeMaxValues = lsList.map(item => item.slope_max);
+    const avgSlopeMedian = slopeMedianValues.reduce((a, b) => a + b, 0) / slopeMedianValues.length;
+    const minSlopeMin = Math.min(...slopeMinValues);
+    const maxSlopeMax = Math.max(...slopeMaxValues);
+    slope ={
+      'min':minSlopeMin,
+      'max':maxSlopeMax,
+      'avg': avgSlopeMedian.toFixed(1),
+      'safety_min': '4',
+      'safety_max': '6'
+    }
   }
 
-  const obstaclePoiList = info.obstaclePoiList;
-  const obstacles = obstaclePoiList.reduce((acc, item) => {
-    acc[item.category] = (acc[item.category] || 0) + 1;
-    return acc;
-  }, {});
+
+  const obstaclePoiList = info?.obstaclePoiList;
+  let obstacles;
+  if(obstaclePoiList){
+    obstacles = obstaclePoiList.reduce((acc, item) => {
+      acc[item.category] = (acc[item.category] || 0) + 1;
+      return acc;
+    }, {});
+  }
 
   return {
     floating_population, slope, obstacles

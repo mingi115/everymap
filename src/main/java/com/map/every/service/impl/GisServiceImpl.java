@@ -33,7 +33,11 @@ public class GisServiceImpl implements GisService {
 
     @Override
     public List<HashMap<String, Object>> getObstaclePOIInRoute(Map<String, Object> paramMap) {
-        return gisDAO.selectObstaclePOIInRoute(paramMap);
+        if(paramMap.get("route") != null && !paramMap.get("route").equals("")) {
+            return gisDAO.selectObstaclePOIInRoute(paramMap);
+        }else{
+            return null;
+        }
     }
 
     @Override
@@ -59,7 +63,11 @@ public class GisServiceImpl implements GisService {
 
     @Override
     public List<HashMap<String, Object>> getFloatingPopHeatmapPoints(Map<String, Object> paramMap) {
-        return gisDAO.selectFloatingPopHeatmapPoints(paramMap);
+        if(paramMap.get("route") != null && !paramMap.get("route").equals("")) {
+            return gisDAO.selectFloatingPopHeatmapPoints(paramMap);
+        }else{
+            return null;
+        }
     }
 
     @Override

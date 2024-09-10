@@ -14,6 +14,7 @@ function fetchShortestPath(startCoord, endCoord, method){
 }
 
 function fetchAiPathSummarization(param){
+  if(!param) return;
   return fetch(`/api/ai/pathSummarization`, {
     method: "POST",
     headers: {
