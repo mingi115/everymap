@@ -59,8 +59,7 @@ function fetchShortestPathWithPop(startCoord, endCoord, method){
     startCoord : convertCoordinateToWKTFormat(startCoord),
     endCoord : convertCoordinateToWKTFormat(endCoord),
     weekday : new Date().getDay(),
-    // time : new Date().getHours()
-    time : 13
+    time : new Date().getHours()
   })
   return fetch(`/api/getShortestPathWithPop/${method}?${params.toString()}`, {
     method: "GET",
