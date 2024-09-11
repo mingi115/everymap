@@ -120,4 +120,22 @@ public class GisServiceImpl implements GisService {
         List<HashMap<String, Object>> paramMap) {
         return gisDAO.selectAstarShortestPath(paramMap);
     }
+
+    @Override
+    public List<HashMap<String, Object>> getSafetyPathLineListWithPop(
+        Map<String, Object> paramMap) {
+        return gisDAO.selectSafetyPathLineListWithPop(paramMap);
+    }
+
+    @Override
+    public List<HashMap<String, Object>> getMetPathLineListWithPop(
+        Map<String, Object> paramMap) {
+        return gisDAO.selectMetPathLineListWithPop(paramMap);
+    }
+
+    @Override
+    public List<HashMap<String, Object>> getShortestPathLineListWithPop(
+        Map<String, Object> paramMap) {
+        return gisDAO.selectShortestPathLineListWithPop(paramMap);
+    }
 }

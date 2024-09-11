@@ -51,3 +51,20 @@ function fetchAstarShortestPath(startCoord, endCoord, method){
     },
   }).then((response) => response.json());
 }
+
+
+
+function fetchShortestPathWithPop(startCoord, endCoord, method){
+  const params = new URLSearchParams({
+    startCoord : convertCoordinateToWKTFormat(startCoord),
+    endCoord : convertCoordinateToWKTFormat(endCoord),
+    weekday : new Date().getDay(),
+    time : new Date().getHours()
+  })
+  return fetch(`/api/getShortestPathWithPop/${method}?${params.toString()}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }).then((response) => response.json());
+}

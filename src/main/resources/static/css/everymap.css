@@ -16,7 +16,7 @@ body {
 .btn-grp{
   position: absolute;
   top: 0;
-  left: 235px;
+  left: 425px;
 }
 #roadview-modal{
   z-index: -1;
@@ -64,5 +64,10 @@ body {
 #side-panel > .side-content{
   background-color: white;
   height: 100vh;
-  width: 200px;
+  width: 385px;
+}
+
+#accordionFlushExample{
+  overflow-y: scroll;
+  height: calc(100vh - 37.33px - 37.33px - 32px);
 }

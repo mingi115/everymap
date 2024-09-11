@@ -4,6 +4,9 @@ let metRouteInfo;
 let astarRouteInfo;
 let astarSafetyRouteInfo;
 let astarMetRouteInfo;
+let popRouteInfo;
+let popSafetyRouteInfo;
+let popMetRouteInfo;
 const wktFormatter = new ol.format.WKT();
 const baseLayer = new ol.layer.Tile({ //타일 생성
   title : 'Vworld Map', //이름
@@ -127,6 +130,9 @@ function clearWindow(){
   astarMetRouteInfo=null;
   astarRouteInfo=null;
   astarSafetyRouteInfo=null;
+  popMetRouteInfo=null;
+  popSafetyRouteInfo=null;
+  popRouteInfo=null;
   if(popChart){
     popChart.destroy();
   }
@@ -173,6 +179,24 @@ document.getElementById('astar-met-path-btn').addEventListener('click', async (e
   }
 });
 
+document.getElementById('shortest-pop-path-btn').addEventListener('click', async (e)=>{
+  await getPopRouteInfo('shortest-pop');
+  if(popRouteInfo){
+    routeSelectEvt(e);
+  }
+});
+document.getElementById('safety-pop-path-btn').addEventListener('click', async (e)=>{
+  await getPopRouteInfo('safety-pop');
+  if(popSafetyRouteInfo){
+    routeSelectEvt(e);
+  }
+});
+document.getElementById('met-pop-path-btn').addEventListener('click', async (e)=>{
+  await getPopRouteInfo('met-pop');
+  if(popMetRouteInfo){
+    routeSelectEvt(e);
+  }
+});
 
 function collapseRouteInfo(){
   document.querySelectorAll('.accordion-button').forEach(item =>{
@@ -210,7 +234,29 @@ async function getRouteInfo(method){
   addPathSummerization(method);
   hideLodingImg();
 }
+async function getPopRouteInfo(method){
+  if(!startPoint || !endPoint)  {
+    alert('출발지와 도착지를 선택해 주세요.');
+    return;
+  }
 
+  const startCoord = startPoint.getGeometry().getCoordinates();
+  const endCoord = endPoint.getGeometry().getCoordinates();
+
+  showLodingImg();
+  if(method==='shortest-pop'){
+    popRouteInfo= popRouteInfo ? popRouteInfo : await fetchShortestPathWithPop(startCoord, endCoord, method)
+    await fillRouteInfoUI(popRouteInfo);
+  }else if (method==='safety-pop'){
+    popSafetyRouteInfo= popSafetyRouteInfo ? popSafetyRouteInfo : await fetchShortestPathWithPop(startCoord, endCoord, method)
+    await fillRouteInfoUI(popSafetyRouteInfo);
+  }else if(method === 'met-pop'){
+    popMetRouteInfo= popMetRouteInfo ? popMetRouteInfo : await fetchShortestPathWithPop(startCoord, endCoord, method)
+    await fillRouteInfoUI(popMetRouteInfo);
+  }
+  addPathSummerization(method)
+  hideLodingImg();
+}
 async function getAstarRouteInfo(method){
   if(!startPoint || !endPoint)  {
     alert('출발지와 도착지를 선택해 주세요.');
@@ -280,7 +326,14 @@ function addPathSummerization(method){
     info = astarSafetyRouteInfo;
   }else if(method === 'astar-met'){
     info = astarMetRouteInfo;
+  }else if(method === 'shortest-pop'){
+    info = popRouteInfo;
+  }else if(method === 'safety-pop'){
+    info = popSafetyRouteInfo;
+  }else if(method === 'met-pop'){
+    info = popMetRouteInfo;
   }
+
 
   let promptParam;
   if(info.route !== ''){
@@ -302,86 +355,81 @@ function parsingPromptParam(method, param){
   if(param) {
     if(param.distance_meter){
       targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-      targetInfoContent.innerHTML += `<span>거리 : </span>`;
-      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${param.distance_meter}m</span>`;
+      targetInfoContent.innerHTML += `<span><strong>거리</strong>  </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-secondary">${param.distance_meter}m</span>`;
       targetInfoContent.innerHTML += `</li><br>`;
     }
 
     const fp = param.floating_population;
     if (fp.quite != null || fp.crowded != null || fp.current != null) {
-      targetInfoContent.innerHTML += '유동인구 :<br>'
+      targetInfoContent.innerHTML += '<strong>유동인구</strong><br>'
+      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
     }
     if (fp.quite != null) {
-      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최소 : </span>`;
-      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.quite}</span>`;
-      targetInfoContent.innerHTML += `</li>`;
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최소  </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-secondary">${fp.quite}</span>`;
     }
+
     if (fp.crowded != null) {
-      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최대 : </span>`;
-      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.crowded}</span>`;
-      targetInfoContent.innerHTML += `</li>`;
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최대  </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-secondary">${fp.crowded}</span>`;
     }
     if (fp.current != null) {
-      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;평균 : </span>`;
-      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${fp.current}</span>`;
-      targetInfoContent.innerHTML += `</li>`;
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;평균  </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-secondary">${fp.current}</span>`;
     }
     if (fp.quite != null || fp.crowded != null || fp.current != null) {
+      targetInfoContent.innerHTML += `</li>`;
       targetInfoContent.innerHTML += '<br>'
     }
+
     const slp = param.slope;
     if (slp.min != null || slp.max != null || slp.avg != null) {
-      targetInfoContent.innerHTML += '경사도 :<br>'
+      targetInfoContent.innerHTML += '<strong>경사도</strong><br>'
+      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
     }
     if (slp.min != null) {
-      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최소 : </span>`;
-      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.min}</span>`;
+
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최소  </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-secondary">${slp.min}</span>`;
       targetInfoContent.innerHTML += `</li>`;
     }
     if (slp.max != null) {
-      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최대 : </span>`;
-      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.max}</span>`;
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;최대  </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-secondary">${slp.max}</span>`;
       targetInfoContent.innerHTML += `</li>`;
     }
     if (slp.avg != null) {
-      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;평균 : </span>`;
-      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${slp.avg}</span>`;
-      targetInfoContent.innerHTML += `</li>`;
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;평균  </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-secondary">${slp.avg}</span>`;
     }
     if (slp.min != null || slp.max != null || slp.avg != null) {
-      targetInfoContent.innerHTML += '<br>'
+      targetInfoContent.innerHTML += `</li>`;
+      targetInfoContent.innerHTML += '<br>';
     }
     const ostc = param.obstacles;
     if (ostc['맨홀'] != null || ostc['과속방지턱'] != null || ostc['빗물받이'] != null) {
-      targetInfoContent.innerHTML += '위험요소 :<br>'
+      targetInfoContent.innerHTML += '<strong>위험요소</strong><br>';
+      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">';
     }
     if (ostc['맨홀'] != null) {
-      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;맨홀 : </span>`;
-      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['맨홀']}</span>`;
-      targetInfoContent.innerHTML += `</li>`;
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;맨홀  </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-secondary">${ostc['맨홀']}</span>`;
     }
     if (ostc['과속방지턱'] != null) {
-      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;과속방지턱 : </span>`;
-      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['과속방지턱']}</span>`;
-      targetInfoContent.innerHTML += `</li>`;
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;과속방지턱  </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-secondary">${ostc['과속방지턱']}</span>`;
     }
     if (ostc['빗물받이'] != null) {
-      targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;빗물받이 : </span>`;
-      targetInfoContent.innerHTML += `<span class="badge bg-primary rounded-pill">${ostc['빗물받이']}</span>`;
+      targetInfoContent.innerHTML += `<span>&nbsp;&nbsp;&nbsp;빗물받이  </span>`;
+      targetInfoContent.innerHTML += `<span class="badge bg-secondary">${ostc['빗물받이']}</span>`;
+    }
+    if (ostc['맨홀'] != null || ostc['과속방지턱'] != null || ostc['빗물받이'] != null) {
       targetInfoContent.innerHTML += `</li>`;
     }
   }else{
     targetInfoContent.innerHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">'
-    targetInfoContent.innerHTML += `<span class="badge bg-danger rounded-pill">검색 결과가 없습니다.</span>`;
+    targetInfoContent.innerHTML += `<span class="badge bg-danger">검색 결과가 없습니다.</span>`;
     targetInfoContent.innerHTML += `</li>`;
   }
   targetInfoContent.innerHTML += '</ul></div>';
@@ -487,7 +535,6 @@ function addStartEndPoint(coord, isStart){
   map.removeOverlay(rClickOverlay);
   if(isStart){
     vectorSource.removeFeature(startPoint);
-
     startPoint=null;
   }else{
     vectorSource.removeFeature(endPoint);
@@ -789,9 +836,7 @@ function findAddress(e){
           addStartEndPoint([result.x, result.y ], false);
         }
         map.getView().setCenter([result.x, result.y ]);
-        e.target.value = result.region_3depth_name ? result.region_3depth_name+ " " :'';
-        e.target.value += result.building_name ? result.building_name+ " ":'';
-        e.target.value += result.main_building_no ? result.main_building_no : '';
+        e.target.value = result.address_name;
       })
       .catch((error) => console.error(error));
     }
