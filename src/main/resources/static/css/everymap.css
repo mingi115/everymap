@@ -16,7 +16,7 @@ body {
 .btn-grp{
   position: absolute;
   top: 0;
-  left: 235px;
+  left: 425px;
 }
 #roadview-modal{
   z-index: -1;
@@ -64,5 +64,5 @@ body {
 #side-panel > .side-content{
   background-color: white;
   height: 100vh;
-  width: 200px;
+  width: 385px;
 }
