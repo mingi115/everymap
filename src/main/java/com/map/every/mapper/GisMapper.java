@@ -24,4 +24,7 @@ public interface GisMapper {
     List<HashMap<String, Object>> selectAstarMetPath(List<HashMap<String, Object>> paramMap);
 
     List<HashMap<String, Object>> selectAstarShortestPath(List<HashMap<String, Object>> paramMap);
+    List<HashMap<String, Object>> selectSafetyPathLineListWithPop(Map<String, Object> paramMap);
+    List<HashMap<String, Object>> selectMetPathLineListWithPop(Map<String, Object> paramMap);
+    List<HashMap<String, Object>> selectShortestPathLineListWithPop(Map<String, Object> paramMap);
 }

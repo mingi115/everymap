@@ -23,4 +23,10 @@ public interface GisService {
     List<HashMap<String, Object>> getAstarMetPathLineList(List<HashMap<String, Object>> paramMap);
 
     List<HashMap<String, Object>> getAstarShortestPathLineList(List<HashMap<String, Object>> paramMap);
+
+    List<HashMap<String, Object>> getSafetyPathLineListWithPop(Map<String, Object> paramMap);
+
+    List<HashMap<String, Object>> getMetPathLineListWithPop(Map<String, Object> paramMap);
+
+    List<HashMap<String, Object>> getShortestPathLineListWithPop(Map<String, Object> paramMap);
 }

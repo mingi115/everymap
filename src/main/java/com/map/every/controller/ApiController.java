@@ -142,4 +142,41 @@ public class ApiController {
         result.put("heatmapPointList", hmpl);
         return result;
     }
+
+    @GetMapping(value = "/getShortestPathWithPop/{method}")
+    public HashMap<String, Object> getShortestPathWithPop(
+        @RequestParam Map<String, Object> paramMap,
+        @PathVariable("method") String method )
+        throws ParseException {
+        log.debug(paramMap.toString());
+        HashMap<String, Object> result = new HashMap<>();
+        List<HashMap<String, Object>> pathToLink = gisService.getPathToLink(paramMap);
+        result.put("pathToLink", pathToLink);
+        paramMap.put("pathToLink", pathToLink);
+
+        List<HashMap<String, Object>> lsList;
+        if(method.equals("safety")){
+            lsList = gisService.getSafetyPathLineListWithPop(paramMap);
+        }else if(method.equals("met")){
+            lsList = gisService.getMetPathLineListWithPop(paramMap);
+        }else{
+            lsList = gisService.getShortestPathLineListWithPop(paramMap);
+        }
+
+        result.put("lsList", lsList);
+
+        String route = gisService.mergeLinestringList(lsList);
+        paramMap.put("route", route);
+
+        result.put("route", route);
+        Double lengthSum = gisService.sumLinkLength(lsList);
+        result.put("lengthSum", lengthSum);
+
+        List<HashMap<String, Object>> op = gisService.getObstaclePOIInRoute(paramMap);
+        result.put("obstaclePoiList", op);
+
+        List<HashMap<String, Object>> hmpl = gisService.getFloatingPopHeatmapPoints(paramMap);
+        result.put("heatmapPointList", hmpl);
+        return result;
+    }
 }

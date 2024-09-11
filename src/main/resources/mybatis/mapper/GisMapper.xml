@@ -263,4 +263,103 @@
     where edge = pl.link_id
       and plss.link_id = pl.link_id;
   </select>
+  <select id="selectSafetyPathLineListWithPop" parameterType="hashMap" resultType="hashMap">
+    <![CDATA[
+    select pl.link_id,
+           st_astext(pl.geom) as wktgeom,
+           pl.link_len::double precision,
+           plss.slope_count,
+           plss.slope_median,
+           plss.slope_min,
+           plss.slope_max
+    from pgr_dijkstra('select
+              pl.link_id::bigint as id,
+              from_node_id::bigint as source,
+              to_node_id::bigint as target,
+              ((link_len * ((3.5 + (plss.slope_avg * 1.8))/3.5)) + (avg(total_pop / 2500 * 4.15) * link_len ))::double precision as cost
+              from
+              pedestrian_link pl,
+              pedestrian_link_slope_stat plss,
+              test.floating_population_cell fpc,
+              floating_population_stat fps
+          where
+              pl.link_id = plss.link_id
+              and fpc.cell_id=fps.cell_id
+              and plss.slope_max < 6
+              and fps.weekday='||#{weekday}||
+                      ' and fps.time='||#{time}||
+                      ' and st_intersects(pl.geom, fpc.geometry)
+                    group by pl.link_id, plss.slope_avg'::text,
+                      #{pathToLink[0].node_id},
+                      #{pathToLink[1].node_id}, false) as pgr,
+         pedestrian_link pl,
+         pedestrian_link_slope_stat plss
+    where edge = pl.link_id
+      and plss.link_id = pl.link_id
+          ]]>
+  </select>
+  <select id="selectMetPathLineListWithPop" parameterType="hashMap" resultType="hashMap">
+    select pl.link_id,
+           st_astext(pl.geom) as wktgeom,
+           pl.link_len::double precision,
+           plss.slope_count,
+           plss.slope_median,
+           plss.slope_min,
+           plss.slope_max
+    from pgr_dijkstra('select
+              pl.link_id::bigint as id,
+              from_node_id::bigint as source,
+              to_node_id::bigint as target,
+              ((link_len * ((3.5 + (plss.slope_avg * 1.8))/3.5)) + (avg(total_pop / 2500 * 4.15) * link_len ))::double precision as cost
+              from
+              pedestrian_link pl,
+              pedestrian_link_slope_stat plss,
+              test.floating_population_cell fpc,
+              floating_population_stat fps
+          where
+              pl.link_id = plss.link_id
+              and fpc.cell_id=fps.cell_id
+              and fps.weekday='||#{weekday}||
+                      ' and fps.time='||#{time}||
+                      ' and st_intersects(pl.geom, fpc.geometry)
+                    group by pl.link_id, plss.slope_avg'::text,
+                      #{pathToLink[0].node_id},
+                      #{pathToLink[1].node_id}, false) as pgr,
+         pedestrian_link pl,
+         pedestrian_link_slope_stat plss
+    where edge = pl.link_id
+      and plss.link_id = pl.link_id
+  </select>
+  <select id="selectShortestPathLineListWithPop" parameterType="hashMap" resultType="hashMap">
+    select pl.link_id,
+           st_astext(pl.geom) as wktgeom,
+           pl.link_len::double precision,
+           plss.slope_count,
+           plss.slope_median,
+           plss.slope_min,
+           plss.slope_max
+    from pgr_dijkstra('select
+              pl.link_id::bigint as id,
+              from_node_id::bigint as source,
+              to_node_id::bigint as target,
+              (link_len  + (avg(total_pop / 2500 * 4.15) * link_len ))::double precision as cost
+              from
+              pedestrian_link pl,
+              pedestrian_link_slope_stat plss,
+              test.floating_population_cell fpc,
+              floating_population_stat fps
+          where
+              pl.link_id = plss.link_id
+              and fpc.cell_id=fps.cell_id
+              and fps.weekday='||#{weekday}||
+              ' and fps.time='||#{time}||
+              ' and st_intersects(pl.geom, fpc.geometry)
+            group by pl.link_id, plss.slope_avg'::text,
+                      #{pathToLink[0].node_id},
+                      #{pathToLink[1].node_id}, false) as pgr,
+         pedestrian_link pl,
+         pedestrian_link_slope_stat plss
+    where edge = pl.link_id
+      and plss.link_id = pl.link_id
+  </select>
 </mapper>

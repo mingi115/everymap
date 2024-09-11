@@ -4,6 +4,9 @@ let metRouteInfo;
 let astarRouteInfo;
 let astarSafetyRouteInfo;
 let astarMetRouteInfo;
+let popRouteInfo;
+let popSafetyRouteInfo;
+let popMetRouteInfo;
 const wktFormatter = new ol.format.WKT();
 const baseLayer = new ol.layer.Tile({ //타일 생성
   title : 'Vworld Map', //이름
@@ -127,6 +130,9 @@ function clearWindow(){
   astarMetRouteInfo=null;
   astarRouteInfo=null;
   astarSafetyRouteInfo=null;
+  popMetRouteInfo=null;
+  popSafetyRouteInfo=null;
+  popRouteInfo=null;
   if(popChart){
     popChart.destroy();
   }
@@ -173,6 +179,24 @@ document.getElementById('astar-met-path-btn').addEventListener('click', async (e
   }
 });
 
+document.getElementById('shortest-pop-path-btn').addEventListener('click', async (e)=>{
+  await getPopRouteInfo('shortest-pop');
+  if(popRouteInfo){
+    routeSelectEvt(e);
+  }
+});
+document.getElementById('safety-pop-path-btn').addEventListener('click', async (e)=>{
+  await getPopRouteInfo('safety-pop');
+  if(popSafetyRouteInfo){
+    routeSelectEvt(e);
+  }
+});
+document.getElementById('met-pop-path-btn').addEventListener('click', async (e)=>{
+  await getPopRouteInfo('met-pop');
+  if(popMetRouteInfo){
+    routeSelectEvt(e);
+  }
+});
 
 function collapseRouteInfo(){
   document.querySelectorAll('.accordion-button').forEach(item =>{
@@ -210,7 +234,29 @@ async function getRouteInfo(method){
   addPathSummerization(method);
   hideLodingImg();
 }
+async function getPopRouteInfo(method){
+  if(!startPoint || !endPoint)  {
+    alert('출발지와 도착지를 선택해 주세요.');
+    return;
+  }
 
+  const startCoord = startPoint.getGeometry().getCoordinates();
+  const endCoord = endPoint.getGeometry().getCoordinates();
+
+  showLodingImg();
+  if(method==='shortest-pop'){
+    popRouteInfo= popRouteInfo ? popRouteInfo : await fetchShortestPathWithPop(startCoord, endCoord, method)
+    await fillRouteInfoUI(popRouteInfo);
+  }else if (method==='safety-pop'){
+    popSafetyRouteInfo= popSafetyRouteInfo ? popSafetyRouteInfo : await fetchShortestPathWithPop(startCoord, endCoord, method)
+    await fillRouteInfoUI(popSafetyRouteInfo);
+  }else if(method === 'met-pop'){
+    popMetRouteInfo= popMetRouteInfo ? popMetRouteInfo : await fetchShortestPathWithPop(startCoord, endCoord, method)
+    await fillRouteInfoUI(popMetRouteInfo);
+  }
+  addPathSummerization(method)
+  hideLodingImg();
+}
 async function getAstarRouteInfo(method){
   if(!startPoint || !endPoint)  {
     alert('출발지와 도착지를 선택해 주세요.');
@@ -280,7 +326,14 @@ function addPathSummerization(method){
     info = astarSafetyRouteInfo;
   }else if(method === 'astar-met'){
     info = astarMetRouteInfo;
+  }else if(method === 'shortest-pop'){
+    info = popRouteInfo;
+  }else if(method === 'safety-pop'){
+    info = popSafetyRouteInfo;
+  }else if(method === 'met-pop'){
+    info = popMetRouteInfo;
   }
+
 
   let promptParam;
   if(info.route !== ''){
@@ -482,7 +535,6 @@ function addStartEndPoint(coord, isStart){
   map.removeOverlay(rClickOverlay);
   if(isStart){
     vectorSource.removeFeature(startPoint);
-
     startPoint=null;
   }else{
     vectorSource.removeFeature(endPoint);

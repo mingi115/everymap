@@ -66,3 +66,8 @@ body {
   height: 100vh;
   width: 385px;
 }
+
+#accordionFlushExample{
+  overflow-y: scroll;
+  height: calc(100vh - 37.33px - 37.33px - 32px);
+}
