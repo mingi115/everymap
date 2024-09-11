@@ -121,9 +121,9 @@ public class ApiController {
 
         result.put("pathToLink", pathToLink);
         List<HashMap<String, Object>> lsList;
-        if(method.equals("safety")){
+        if(method.equals("astar-safety")){
             lsList = gisService.getAstarSafetyPathLineList(pathToLink);
-        }else if(method.equals("met")){
+        }else if(method.equals("astar-met")){
             lsList = gisService.getAstarMetPathLineList(pathToLink);
         }else{
             lsList = gisService.getAstarShortestPathLineList(pathToLink);
