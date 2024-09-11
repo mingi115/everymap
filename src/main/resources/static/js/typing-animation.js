@@ -1,13 +1,14 @@
+let typingInstance;
 function animateTyping(messageElementId, message = '', typeSpeed = 20){
   if (document.querySelector(messageElementId) === null) {
     console.error('messageElementId not found');
   }
-
+  if(typingInstance) typingInstance.stop();
   const cardBody = document.querySelector(messageElementId);
   const config = { childList: true, subtree: true };
   observer.observe(cardBody, config);
   message = message.trim().replace(/(?:\r\n|\r|\n)/g, '<br>');
-  var typingInstance = new Typed(messageElementId, { strings: [ message ], typeSpeed, showCursor: false, });
+  typingInstance = new Typed(messageElementId, { strings: [ message ], typeSpeed, showCursor: false, });
 }
 function cardWrapperScrollToBottom(){
   const chatContainer = document.querySelector(".card-body-wrapper");
